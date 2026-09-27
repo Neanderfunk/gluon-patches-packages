@@ -1,6 +1,6 @@
 # Gluon-Patches zu den Neanderfunk-Paketen
 
-*Patches for Gluon v2023.2.x / OpenWrt 23.05 that go together with packages
+*Patches for Gluon v2025.1.x / OpenWrt 24.10 that go together with packages
 from the [Neanderfunk/packages](https://github.com/Neanderfunk/packages) feed:
 an extended status page (neanderfunk-respondd, neanderfunk-ssid-changer) and
 setup-mode network services (neanderfunk-setup-mode, neanderfunk-setup-wifi).
@@ -12,8 +12,13 @@ in order.*
 liegen nicht im Feed selbst: Der Feed wird unter `gluon/packages/<name>`
 eingehängt, die Patches laufen aber vom Gluon-Verzeichnis aus.
 
-Die Zweige folgen Gluon: `v2023.2.x` passt zu Gluon v2023.2.x (OpenWrt 23.05,
-Kernel 5.15) und zum Feed-Zweig `v2023.2.x`.
+Die Zweige folgen Gluon: `v2025.1.x` passt zu Gluon v2025.1.x (OpenWrt 24.10,
+Kernel 6.6) und zum Feed-Zweig `v2025.1.x`; `v2023.2.x` zu Gluon v2023.2.x.
+
+Auf `v2025.1.x` ist die Statusseiten-Kette gegen die 2025.1-Statusseite neu
+aufgesetzt: SSID und HT-Modus je Radio stehen dort schon upstream (7c040c2d),
+`statuspage-ssid` traegt nur noch unsere Abweichungen (robuste Zeilen,
+Offline-SSID-Zeile). Die Statusseite sieht aus wie auf v2023.2.x im Feld.
 
 ## Anwenden
 

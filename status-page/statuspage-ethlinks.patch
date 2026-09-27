@@ -54,9 +54,11 @@ pcall faengt das ab, die Liste bliebe leer und die Tabelle erschiene nie.
 Ein stiller Ausfall also, den man nur bemerkt, wenn man auf das Ergebnis
 schaut statt auf den Patch.
 
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 166df80..5cc250b 100644
 --- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
 +++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
-@@ -145,6 +145,95 @@
+@@ -151,6 +151,95 @@
  		end
  		return string.format('%.0f MiB', n / (1024 * 1024))
  	end
@@ -152,7 +154,7 @@ schaut statt auf den Patch.
  	local function get_radios()
  		local ret = {}
  
-@@ -188,6 +277,8 @@
+@@ -194,6 +283,8 @@
  
  	local interfaces = get_interfaces(uconn)
  
@@ -161,13 +163,10 @@ schaut statt auf den Patch.
  	ubus.close(uconn)
  
  	local radios = get_radios()
-@@ -407,6 +498,25 @@
- 								</tr>
- 							<%- end %>
- 						</tbody>
-+					</table>
-+				<%- end %>
-+
+@@ -416,6 +507,25 @@
+ 					</table>
+ 				<%- end %>
+ 
 +				<% if ethlinks[1] then -%>
 +					<h3><%:Ethernet%></h3>
 +					<table>
@@ -184,6 +183,9 @@ schaut statt auf den Patch.
 +								</tr>
 +							<%- end %>
 +						</tbody>
- 					</table>
- 				<%- end %>
- 
++					</table>
++				<%- end %>
++
+ 				<h3><%:Traffic%></h3>
+ 				<table>
+ 					<tbody>

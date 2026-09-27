@@ -59,9 +59,11 @@ Reihenfolge: dieser Patch setzt auf dem Stand NACH statuspage-moredetails.patch
 auf, weil jener direkt hinter der Modellzeile Eintraege einfuegt und damit den
 Kontext veraendert. apply.sh ruft die Skripte in dieser Reihenfolge auf.
 
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index f4cef7e..166df80 100644
 --- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
 +++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
-@@ -54,6 +54,97 @@
+@@ -60,6 +60,97 @@
  		return v
  	end
  
@@ -159,7 +161,7 @@ Kontext veraendert. apply.sh ruft die Skripte in dieser Reihenfolge auf.
  	local function get_radios()
  		local ret = {}
  
-@@ -100,6 +191,16 @@
+@@ -106,6 +197,16 @@
  	ubus.close(uconn)
  
  	local radios = get_radios()
@@ -176,7 +178,7 @@ Kontext veraendert. apply.sh ruft die Skripte in dieser Reihenfolge auf.
  	local offline_ssid_triggered = get_offline_ssid_triggered()
  
  	local function sorted(t)
-@@ -174,7 +275,16 @@
+@@ -180,7 +281,16 @@
  							<%| nodeinfo.location.latitude %>, <%| nodeinfo.location.longitude %>
  						</a></dd>
  					<%- end %>

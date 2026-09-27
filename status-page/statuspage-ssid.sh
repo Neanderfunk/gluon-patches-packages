@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Ergaenzt die Gluon-Statusseite um SSID und HT-Modus je Radio.
-# Backport aus Gluon v2025.1, siehe Kopf von statuspage-ssid.patch.
+# SSID und HT-Modus je Radio: auf Gluon 2025.1 schon upstream, hier nur unsere
+# Abweichungen (robuste Zeilen, Offline-SSID-Zeile), siehe Kopf des Patches.
 #
 # Setzt auf dem Zustand nach statuspage-moredetails.sh auf.
 #
@@ -14,4 +14,4 @@ echo "Gluon-Statuspage: SSID und HT-Modus je Radio"
 
 apply_patch "$PATCH_DIR/statuspage-ssid.patch" \
   "package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html" \
-  'radio\.ssid'
+  'offline_ssid_triggered'

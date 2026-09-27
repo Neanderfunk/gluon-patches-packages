@@ -25,10 +25,11 @@ Query-String aus. Betroffen:
 
 Setzt auf statuspage-respondd auf (Kontext in status-page.html).
 
-diff -ru a/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html b/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html
---- a/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html	2026-09-11 21:33:32.410830075 +0200
-+++ b/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html	2026-09-11 21:33:32.462341718 +0200
-@@ -95,7 +95,7 @@
+diff --git a/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html b/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html
+index 9633531..b1ef0b9 100644
+--- a/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html
++++ b/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/theme/layout.html
+@@ -95,7 +95,7 @@ SPDX-FileCopyrightText: 2008-2010 Jo-Philipp Wich <xm@subsignal.org>
  <html lang="">
  	<head>
  		<meta charset="UTF-8">
@@ -37,9 +38,10 @@ diff -ru a/package/gluon-config-mode-theme/files/lib/gluon/config-mode/view/them
  		<title><%| hostname .. ((rnode and rnode.title) and ' - ' .. title(rnode) or '') %></title>
  	</head>
  	<body>
-diff -ru a/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html b/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html
---- a/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html	2026-09-11 21:33:32.410830075 +0200
-+++ b/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html	2026-09-11 21:33:32.462305821 +0200
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html b/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html
+index d3201ef..bcc330b 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/layout.html
 @@ -10,7 +10,7 @@
  
  		<title><%:Error%></title>
@@ -49,10 +51,11 @@ diff -ru a/package/gluon-status-page/files/lib/gluon/status-page/view/layout.htm
  	</head>
  	<body>
  		<header>
-diff -ru a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
---- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html	2026-09-11 21:33:32.394051202 +0200
-+++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html	2026-09-11 21:33:32.462262319 +0200
-@@ -255,7 +255,7 @@
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 725ca96..bc0c45f 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -297,7 +297,7 @@
  
  		<title><%| nodeinfo.hostname %> - <%:Status%></title>
  
@@ -61,7 +64,7 @@ diff -ru a/package/gluon-status-page/files/lib/gluon/status-page/view/status-pag
  	</head>
  	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>"<%=
  		attr('data-translations', translations) ..
-@@ -482,6 +482,6 @@
+@@ -530,6 +530,6 @@
  				%>
  			</div>
  		</div>
@@ -69,18 +72,20 @@ diff -ru a/package/gluon-status-page/files/lib/gluon/status-page/view/status-pag
 +		<script src="/static/status-page.js?v=<%| ((require('gluon.util').readfile('/lib/gluon/release') or ''):gsub('%s+', '')) %>"></script>
  	</body>
  </html>
-diff -ru a/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html b/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html
---- a/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html	2026-09-11 21:33:32.414830118 +0200
-+++ b/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html	2026-09-11 21:33:32.462372787 +0200
+diff --git a/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html b/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html
+index a49fe93..96600a9 100644
+--- a/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html
++++ b/package/gluon-web-model/files/lib/gluon/web/view/model/wrapper.html
 @@ -3,4 +3,4 @@
  		map:render(renderer)
  	end
  %>
 -<script type="text/javascript" src="/static/gluon-web-model.js"></script>
 +<script type="text/javascript" src="/static/gluon-web-model.js?v=<%| ((require('gluon.util').readfile('/lib/gluon/release') or ''):gsub('%s+', '')) %>"></script>
-diff -ru a/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html b/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
---- a/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html	2026-09-11 21:33:32.414830118 +0200
-+++ b/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html	2026-09-11 21:33:32.462403695 +0200
+diff --git a/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html b/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
+index 2caa3f3..67c119c 100644
+--- a/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
++++ b/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
 @@ -1,5 +1,5 @@
  <div id="<%=id%>" class="gluon-osm-map" style="display: none"></div>
 -<script type="text/javascript" src="/static/gluon-web-osm.js"></script>

@@ -39,9 +39,11 @@ Ein eigener Patch am Ende der Statusseiten-Kette statt einer Aenderung an
 statuspage-ssid.patch: statuspage-hwdetails.patch fuehrt die Zeile mit
 offline_ssid_triggered als Kontext und passte sonst nicht mehr.
 
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 5cc250b..38fbce4 100644
 --- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
 +++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
-@@ -54,6 +54,30 @@
+@@ -60,6 +60,30 @@
  		return v
  	end
  
@@ -72,7 +74,7 @@ offline_ssid_triggered als Kontext und passte sonst nicht mehr.
  	local function read_first_line(path)
  		local f = io.open(path)
  		if not f then return nil end
-@@ -293,6 +317,22 @@
+@@ -299,6 +323,22 @@
  		ram_flash = (ram_total or '?') .. ' / ' .. (flash_total or '?')
  	end
  	local offline_ssid_triggered = get_offline_ssid_triggered()
@@ -95,7 +97,7 @@ offline_ssid_triggered als Kontext und passte sonst nicht mehr.
  
  	local function sorted(t)
  		t = {unpack(t)}
-@@ -491,10 +531,17 @@
+@@ -497,10 +537,17 @@
  									</tr>
  								<%- end %>
  							<%- end %>
