@@ -54,6 +54,7 @@ umgeschrieben hat.
 | `status-page/statuspage-ssidchanger-zaehler.sh` | Statusseite: Zustand und Zähler des ssid-changer seit Boot | `neanderfunk-ssid-changer` |
 | `status-page/statuspage-respondd.sh` | Statusseite: Werte aus neanderfunk-respondd, live, inkl. Temperatur | `neanderfunk-respondd` |
 | `status-page/web-static-version.sh` | Statusseite und Config-Mode: CSS/JS mit Versionsanhang gegen den Browser-Cache | |
+| `status-page/statuspage-darkmode.sh` | Statusseite: Darkmode nach `prefers-color-scheme`, Farben aus dem Darkmode von `neanderfunk-config-mode-theme` | |
 | `setup-mode-network/setup-mode-hostnames.sh` | `gluon.setup` und `setup.gluon` per DNS auf 192.168.1.1 | |
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
@@ -68,6 +69,8 @@ Alle Skripte laufen post-update. `setup-mode-hostnames` und
 * **`status-page/`** ist eine Kette auf dieselbe Datei: `moredetails` →
   `ssid` → `hwdetails` → `ethlinks` → `ssidchanger-zaehler` → `respondd` →
   `web-static-version`. Nur in dieser Reihenfolge oder als Ganzes übernehmen.
+  `statuspage-darkmode` ändert nur das Stylesheet und hängt an keinem
+  Glied der Kette.
   Ohne `neanderfunk-respondd` entfallen Ethernet-Tabelle und Hardware-Zeilen;
   ohne `neanderfunk-ssid-changer` bleibt es bei einer Zahl statt der Zähler.
 * **`setup-mode-network/`**: `setup-mode-captive` baut auf
