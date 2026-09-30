@@ -1,0 +1,77 @@
+Gluon-Statuspage: SSID des OWE-BSS und des privaten WLANs je Radio
+
+Neben der Client-SSID (statuspage-ssid.patch) je Radio zwei weitere Zeilen,
+jeweils nur, wenn es die uci-Sektion gibt:
+
+  - "SSID (OWE)": owe_radioN, Interface oweN (seit FirmwareConfigs c62aa84
+    die eigene SSID "Freifunk verschluesselt").
+  - "Privates WLAN": wan_radioN, Interface wl-wanN, nur mit Rolle "private".
+
+Gezeigt wird die SSID, die das Interface gerade funkt (iwinfo), sonst "aus":
+abgeschaltet, auch als Laufzeit-Delta von neanderfunk-ap-timer oder
+neanderfunk-ssid-changer (die das OWE-BSS mitschalten), oder nicht
+hochgekommen. Die Offline-SSID steht schon in der Client-Zeile. Den
+Schluessel des privaten WLANs zeigt die Seite nie, sie ist ohne Anmeldung
+erreichbar. Texte aus dem Katalog neanderfunk-status-page (nf, siehe
+statuspage-i18n.patch).
+
+Setzt auf dem Zustand nach statuspage-darkmode.sh auf (letzter Patch der
+Statusseite). Die Werte kommen beim Laden der Seite, nicht live.
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 6bdc96e..424d21c 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -142,6 +142,24 @@
+ 			pcdata(key), pcdata(format or 'id'), pcdata(value ~= nil and tostring(value) or ''))
+ 	end
+ 
++	-- Neben dem Client-AP: das OWE-BSS (owe_radioN, Interface oweN) und das
++	-- private WLAN (wan_radioN, Interface wl-wanN, nur mit Rolle "private").
++	-- nil, wenn es die Sektion nicht gibt (keine Zeile). Sonst die SSID, die
++	-- das Interface gerade funkt, oder false, wenn es aus ist - abgeschaltet
++	-- (auch als Laufzeit-Delta von ap-timer oder ssid-changer) oder nicht
++	-- hochgekommen. Den Schluessel des privaten WLANs zeigt die Seite nie, sie
++	-- ist ohne Anmeldung erreichbar.
++	local function ap_ssid(section, ifname)
++		if not uci:get('wireless', section) then
++			return nil
++		end
++		local d = uci:get('wireless', section, 'disabled')
++		if d == '1' or d == 'true' or d == 'yes' or d == 'on' or d == 'enabled' then
++			return false
++		end
++		return (ifname and iwinfo.nl80211.ssid(ifname)) or false
++	end
++
+ 	local function get_radios()
+ 		local ret = {}
+ 
+@@ -156,6 +174,8 @@
+ 					channel = channel,
+ 					ssid = ssid,
+ 					htmode = radio.htmode,
++					owe = ap_ssid('owe_' .. radio_name, suffix and ('owe' .. suffix)),
++					private = ap_ssid('wan_' .. radio_name, suffix and ('wl-wan' .. suffix)),
+ 				})
+ 			end
+ 		end)
+@@ -454,6 +474,18 @@
+ 										<td><%| translate('SSID') %>: <%= live('neanderfunk/wireless/' .. radio.name .. '/ssid', radio.ssid) %></td>
+ 									</tr>
+ 								<%- end %>
++								<% if radio.owe ~= nil then -%>
++									<tr>
++										<th></th>
++										<td><%| translate('SSID') %> (OWE): <% if radio.owe then %><%| radio.owe %><% else %><%| nf.translate('off') %><% end %></td>
++									</tr>
++								<%- end %>
++								<% if radio.private ~= nil then -%>
++									<tr>
++										<th></th>
++										<td><%| nf.translate('Private WLAN') %>: <% if radio.private then %><%| radio.private %><% else %><%| nf.translate('off') %><% end %></td>
++									</tr>
++								<%- end %>
+ 							<%- end %>
+ 							<% if sc_state then -%>
+ 								<tr>
