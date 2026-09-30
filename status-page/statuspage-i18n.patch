@@ -1,0 +1,135 @@
+Statusseite: Texte der Neanderfunk-Zeilen aus dem eigenen Katalog.
+
+Die Patches der status-page-Kette hatten Texte fest im Template, teils
+deutsch auch auf der englischen Seite ("Temperatur", "Zaehler:", der
+Zustand "deaktiviert", der Tooltip der Zaehler) und deutsche msgids
+("Mesh MAC-Adresse"). Andere Zeilen suchten ihre Texte in Gluons Katalog
+von gluon-status-page, wo es sie nicht gibt (CPU, BIOS, ImageName ...).
+
+Jetzt liest das Template diese Texte mit i18n('neanderfunk-status-page')
+aus dem Katalog des gleichnamigen Feed-Pakets (Neanderfunk/packages,
+neanderfunk-status-page: i18n/de.po und .pot). Gluons eigener Katalog
+bleibt unberuehrt, es kommt keine neue Patch-Stelle an Gluons .po dazu.
+Ohne das Paket erscheinen die Zeilen englisch. Der Zustand der
+Offline-SSID heisst intern "disabled" und nutzt fuer die Anzeige Gluons
+vorhandenes translate('disabled').
+
+Setzt auf der ganzen Kette auf (moredetails, ssid, hwdetails, ethlinks,
+ssidchanger-zaehler, respondd, web-static-version).
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index bc0c45f..6bdc96e 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -11,6 +11,10 @@
+ 
+ 	local translations = {}
+ 	local site_i18n = i18n 'gluon-site'
++	-- Texte der Neanderfunk-Zeilen aus dem eigenen Katalog (Feed-Paket
++	-- neanderfunk-status-page); Gluons Katalog bleibt unberuehrt. Ohne das
++	-- Paket erscheinen sie englisch.
++	local nf = i18n 'neanderfunk-status-page'
+ 
+ 	local function _(v)
+ 		translations[v] = translate(v)
+@@ -234,14 +238,15 @@
+ 	local offline_ssid_triggered = get_offline_ssid_triggered()
+ 	local sc_switches, sc_losses = get_ssid_changer_counts()
+ 
+-	-- Zustand der Offline-SSID in einem Wort: "deaktiviert" (Funktion per uci
++	-- Zustand der Offline-SSID in einem Wort: "disabled" (Funktion per uci,
++	-- angezeigt als translate('disabled')
+ 	-- aus), sonst "offline" bzw. "online" nach /tmp/ssid-changer-offline. Frueher
+ 	-- stand hier "triggered: x/y/z", und das wurde als "gerade ausgeloest"
+ 	-- gelesen, auch bei 0/0/0. Ohne ssid-changer-Konfiguration keine Zeile.
+ 	local sc_state
+ 	if uci:get('ssid-changer', 'settings') then
+ 		if uci:get('ssid-changer', 'settings', 'enabled') == '0' then
+-			sc_state = 'deaktiviert'
++			sc_state = 'disabled'
+ 		elseif offline_ssid_triggered == '1' then
+ 			sc_state = 'offline'
+ 		elseif offline_ssid_triggered == '0' then
+@@ -323,29 +328,29 @@
+ 					<%- end %>
+ 					<dt><%:Model%></dt><dd><%| nodeinfo.hardware.model %><% if nodeinfo.hardware.nproc then %> (<%| nodeinfo.hardware.nproc %> <%| nodeinfo.hardware.nproc == 1 and 'CPU' or 'CPUs' %>)<% end %></dd>
+ 					<% if cpu_model then -%>
+-						<dt><%:CPU%></dt><dd><%| cpu_model %></dd>
++						<dt><%| nf.translate('CPU') %></dt><dd><%| cpu_model %></dd>
+ 					<%- end %>
+ 					<% if bios then -%>
+-						<dt><%:BIOS%></dt><dd><%| bios %></dd>
++						<dt><%| nf.translate('BIOS') %></dt><dd><%| bios %></dd>
+ 					<%- end %>
+ 					<% if ram_flash then -%>
+-						<dt><%:RAM/Flash%></dt><dd><%| ram_flash %></dd>
++						<dt><%| nf.translate('RAM/Flash') %></dt><dd><%| ram_flash %></dd>
+ 					<%- end %>
+ 					<% if nodeinfo.software.firmware.target then -%>
+-						<dt><%:Target/Subtarget%></dt><dd><%| nodeinfo.software.firmware.target %>/<%| nodeinfo.software.firmware.subtarget %></dd>
++						<dt><%| nf.translate('Target/Subtarget') %></dt><dd><%| nodeinfo.software.firmware.target %>/<%| nodeinfo.software.firmware.subtarget %></dd>
+ 					<%- end %>
+ 					<% if nodeinfo.software.firmware.image_name then -%>
+-						<dt><%:ImageName%></dt><dd><%| nodeinfo.software.firmware.image_name %></dd>
++						<dt><%| nf.translate('Image name') %></dt><dd><%| nodeinfo.software.firmware.image_name %></dd>
+ 					<%- end %>
+ 					<dt><%:Primary MAC address%></dt><dd><%| nodeinfo.network.mac %></dd>
+ 					<% local mesh_if = nodeinfo.network.mesh and nodeinfo.network.mesh.bat0
+ 							and nodeinfo.network.mesh.bat0.interfaces %>
+ 					<% if mesh_if and mesh_if.other and mesh_if.other[1] then -%>
+-						<dt><%:Mesh MAC-Adresse%></dt><dd><%| mesh_if.other[1] %></dd>
++						<dt><%| nf.translate('Mesh MAC address') %></dt><dd><%| mesh_if.other[1] %></dd>
+ 					<%- end %>
+ 					<dt><%:IP address%></dt><dd><%= pcdata(table.concat(sorted(nodeinfo.network.addresses), '\n')):gsub('\n', '<br>') %></dd>
+ 					<% if nodeinfo.software.firmware.base then -%>
+-						<dt><%:Gluon Version%></dt><dd><%| nodeinfo.software.firmware.base %></dd>
++						<dt><%| nf.translate('Gluon version') %></dt><dd><%| nodeinfo.software.firmware.base %></dd>
+ 					<%- end %>
+ 					<dt><%:Firmware%></dt><dd><%| nodeinfo.software.firmware.release %></dd>
+ 					<% if nodeinfo.network.mesh_vpn then -%>
+@@ -378,7 +383,7 @@
+ 						<%- end %>
+ 					<%- end %>
+ 					<% if nodeinfo.system.site_code then -%>
+-						<dt><%:Sitecode%></dt><dd><%| nodeinfo.system.site_code %></dd>
++						<dt><%| nf.translate('Site code') %></dt><dd><%| nodeinfo.system.site_code %></dd>
+ 					<%- end %>
+ 					<dt><%:Site%></dt><dd><%| site.site_name() %></dd>
+ 					<% if nodeinfo.system.domain_code then -%>
+@@ -414,7 +419,7 @@
+ 						<tr><th><%:Uptime%></th><td><%= statistics('uptime', 'time') %></td></tr>
+ 						<tr><th><%:Load average%></th><td><%= statistics('loadavg', 'decimal') %></td></tr>
+ 						<% if #temps > 0 then -%>
+-						<tr><th>Temperatur</th><td><% for i, t in ipairs(temps) do %><% if i > 1 then %>, <% end %><%| t.name == 'soc' and 'SoC' or t.name %> <%= live('neanderfunk/temperature/' .. t.name, format_temp(t.value), 'nfTemp') %><% end %></td></tr>
++						<tr><th><%| nf.translate('Temperature') %></th><td><% for i, t in ipairs(temps) do %><% if i > 1 then %>, <% end %><%| t.name == 'soc' and 'SoC' or t.name %> <%= live('neanderfunk/temperature/' .. t.name, format_temp(t.value), 'nfTemp') %><% end %></td></tr>
+ 						<%- end %>
+ 						<tr><th><%:RAM%></th><td><%= statistics('memory', 'memory') %></td></tr>
+ 						<tr><th><%:Filesystem%></th><td><%= statistics('rootfs_usage', 'percent') %></td></tr>
+@@ -452,13 +457,13 @@
+ 							<%- end %>
+ 							<% if sc_state then -%>
+ 								<tr>
+-									<th><%:Offline-SSID%></th>
+-									<td><% if sc_state == 'deaktiviert' then %><%| sc_state %><% else %><%= live('neanderfunk/ssid_changer/offline', sc_state, 'nfOffline') %><% end %></td>
+-									<% if sc_state ~= 'deaktiviert' then -%>
++									<th><%| nf.translate('Offline SSID') %></th>
++									<td><% if sc_state == 'disabled' then %><%| translate('disabled') %><% else %><%= live('neanderfunk/ssid_changer/offline', sc_state, 'nfOffline') %><% end %></td>
++									<% if sc_state ~= 'disabled' then -%>
+ 										<% if sc_switches then -%>
+-											<td title="jetzt offline (0/1) / Offline-SSID geschaltet seit Start / Gateway verloren seit Start">Zähler: <%= live('neanderfunk/ssid_changer/offline', offline_ssid_triggered) %>/<%= live('neanderfunk/ssid_changer/switches', sc_switches) %>/<%= live('neanderfunk/ssid_changer/gateway_losses', sc_losses) %></td>
++											<td title="<%| nf.translate('now offline (0/1) / Offline SSID switched on since boot / gateway lost since boot') %>"><%| nf.translate('Counters') %>: <%= live('neanderfunk/ssid_changer/offline', offline_ssid_triggered) %>/<%= live('neanderfunk/ssid_changer/switches', sc_switches) %>/<%= live('neanderfunk/ssid_changer/gateway_losses', sc_losses) %></td>
+ 										<%- else -%>
+-											<td title="jetzt offline (0/1)">Zähler: <%| offline_ssid_triggered %></td>
++											<td title="<%| nf.translate('now offline (0/1)') %>"><%| nf.translate('Counters') %>: <%| offline_ssid_triggered %></td>
+ 										<%- end %>
+ 									<%- end %>
+ 								</tr>
+@@ -468,7 +473,7 @@
+ 				<%- end %>
+ 
+ 				<% if ethlinks[1] then -%>
+-					<h3><%:Ethernet%></h3>
++					<h3><%| nf.translate('Ethernet') %></h3>
+ 					<table>
+ 						<tbody>
+ 							<% for _, l in ipairs(ethlinks) do -%>
