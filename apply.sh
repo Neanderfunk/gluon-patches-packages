@@ -41,6 +41,7 @@ POST_UPDATE=(
   status-page/statuspage-darkmode.sh            # Statusseite: Darkmode nach prefers-color-scheme
   status-page/statuspage-ssid-owe-private.sh    # Statusseite: SSID von OWE und privatem WLAN
   status-page/statuspage-gateway-name.sh       # Statusseite: Gateway mit Hostnamen
+  status-page/statuspage-distance-wired.sh     # Statusseite: Entfernung nur bei WLAN-Nachbarn (Gluon-Fehler)
   setup-mode-network/setup-mode-hostnames.sh    # Setup-Mode: gluon.setup und setup.gluon per DNS
   setup-mode-network/setup-mode-captive.sh      # Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite
   setup-mode-network/setup-mode-wifi.sh         # Setup-Mode: dnsmasq an br-setup (fuer neanderfunk-setup-wifi)

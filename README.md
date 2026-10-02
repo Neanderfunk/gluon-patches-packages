@@ -58,6 +58,7 @@ umgeschrieben hat.
 | `status-page/statuspage-darkmode.sh` | Statusseite: Darkmode nach `prefers-color-scheme`, Farben aus dem Darkmode von `neanderfunk-config-mode-theme` | |
 | `status-page/statuspage-ssid-owe-private.sh` | Statusseite: SSID des OWE-BSS und des privaten WLANs je Radio, sonst "aus"; nie den Schlüssel | `neanderfunk-status-page` |
 | `status-page/statuspage-gateway-name.sh` | Statusseite: Gateway mit Hostnamen (per respondd vom Gateway selbst), MAC als Tooltip | `neanderfunk-status-page` (CGI `gateway-name`) |
+| `status-page/statuspage-distance-wired.sh` | Statusseite: Entfernung nur bei WLAN-Nachbarn setzen; behebt einen TypeError aus Gluon bei Nachbarn am Kabel | |
 | `setup-mode-network/setup-mode-hostnames.sh` | `gluon.setup` und `setup.gluon` per DNS auf 192.168.1.1 | |
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
@@ -72,7 +73,7 @@ Alle Skripte laufen post-update. `setup-mode-hostnames` und
 * **`status-page/`** ist eine Kette auf dieselbe Datei: `moredetails` →
   `ssid` → `hwdetails` → `ethlinks` → `ssidchanger-zaehler` → `respondd` →
   `web-static-version` → `i18n` → `ssid-owe-private` (setzt auf `i18n` auf,
-  läuft nach `darkmode`) → `gateway-name`. Nur in dieser Reihenfolge oder als Ganzes übernehmen.
+  läuft nach `darkmode`) → `gateway-name` → `distance-wired`. Nur in dieser Reihenfolge oder als Ganzes übernehmen.
   `statuspage-i18n` braucht das Feed-Paket `neanderfunk-status-page` für die
   Übersetzungen; ohne es erscheinen die Zeilen englisch.
   `statuspage-darkmode` ändert nur das Stylesheet und hängt an keinem
