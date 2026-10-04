@@ -27,21 +27,9 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # damit alle Patch-Repos gleich aufgerufen werden.
 PRE_UPDATE=()
 
-# Zwei Ketten, jede auf ihre eigenen Dateien; zwischen den Ketten ist die
-# Reihenfolge egal, innerhalb nicht (README, Abhaengigkeiten).
 POST_UPDATE=(
-  status-page/statuspage-moredetails.sh         # Statusseite: weitere MACs und Gluon-Version
-  status-page/statuspage-ssid.sh                # Statusseite: SSID, HT-Modus und ssid-changer
-  status-page/statuspage-hwdetails.sh           # Statusseite: CPU-Typ, Kernzahl und BIOS
-  status-page/statuspage-ethlinks.sh            # Statusseite: Ethernet-Geschwindigkeit je Port
-  status-page/statuspage-ssidchanger-zaehler.sh # Statusseite: Zaehler des ssid-changer seit Boot
-  status-page/statuspage-respondd.sh            # Statusseite: Werte aus neanderfunk-respondd, live
-  status-page/web-static-version.sh             # Statusseite und Config-Mode: CSS/JS mit Versionsanhang
-  status-page/statuspage-i18n.sh                # Statusseite: Texte aus dem Katalog neanderfunk-status-page
-  status-page/statuspage-darkmode.sh            # Statusseite: Darkmode nach prefers-color-scheme
-  status-page/statuspage-ssid-owe-private.sh    # Statusseite: SSID von OWE und privatem WLAN
-  status-page/statuspage-gateway-name.sh       # Statusseite: Gateway mit Hostnamen
-  status-page/statuspage-distance-wired.sh     # Statusseite: Entfernung nur bei WLAN-Nachbarn (Gluon-Fehler)
+  mesh-vpn/tunneldigger-watchdog-no-wan.sh      # tunneldigger-watchdog: ohne WAN-IPv4 kein Neustart
+)
   setup-mode-network/setup-mode-hostnames.sh    # Setup-Mode: gluon.setup und setup.gluon per DNS
   setup-mode-network/setup-mode-captive.sh      # Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite
   setup-mode-network/setup-mode-wifi.sh         # Setup-Mode: dnsmasq an br-setup (fuer neanderfunk-setup-wifi)
