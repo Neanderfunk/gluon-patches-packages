@@ -14,4 +14,4 @@ echo "Gluon-Statuspage: weitere MACs und Gluon-Version"
 
 apply_patch "$PATCH_DIR/statuspage-moredetails.patch" \
   "package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html" \
-  'Gluon Version'
+  'mesh_if.other'

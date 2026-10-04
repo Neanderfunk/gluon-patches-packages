@@ -12,4 +12,4 @@ echo "Gluon-Statuspage: Ethernet-Geschwindigkeit je Port"
 
 apply_patch "$PATCH_DIR/statuspage-ethlinks.patch" \
   "package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html" \
-  'get_ethlinks'
+  'ethlinks'

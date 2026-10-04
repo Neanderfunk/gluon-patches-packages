@@ -14,4 +14,4 @@ echo "Gluon-Statuspage: CPU-Typ, Kernzahl und BIOS"
 
 apply_patch "$PATCH_DIR/statuspage-hwdetails.patch" \
   "package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html" \
-  'get_cpu_model'
+  'cpu_model'

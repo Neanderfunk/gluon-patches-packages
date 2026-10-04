@@ -1,0 +1,116 @@
+Statusseite: Rolle je Ethernet-Port (DSA) bzw. je Portgruppe (swconfig).
+
+Wunsch adorfer (04.10.2026): pro LAN-Port die Rolle, ein Buchstabe reicht;
+bei Geraeten ohne DSA wenigstens, ob LAN auf Mesh oder Client steht.
+
+Die Rolle kommt beim Laden aus /etc/config/gluon (gluon.iface_*.role), wie
+nodestatus sie liest: "/lan", "/wan", "/single" stehen fuer die Ports in
+/lib/gluon/core/sysconfig/<x>_ifname. Konfiguration, kein Live-Wert.
+
+- DSA (Ports einzeln in neanderfunk-respondd statistics.neanderfunk.ethernet):
+  dritte Spalte in der Ethernet-Tabelle, V = Uplink (dort laeuft das
+  Mesh-VPN), M = Mesh, C = Client; mehrere Rollen "V M". Ausgeschrieben im
+  Tooltip. Mit neanderfunk-port-roles (iface_port_<port>) je Port verschieden.
+- swconfig (LAN ist eth0.1 am Switch, respondd kennt keine Ports): eine Zeile
+  je Gruppe, "LAN  Mesh  M" / "WAN  Uplink/VPN  V", Device im Tooltip, "all
+  ports" am Rollentext. Der Ethernet-Abschnitt erscheint damit auch dort, wo
+  er bisher ganz fehlte (WDR3600).
+
+Texte aus dem Katalog neanderfunk-status-page (Feed): "Uplink/VPN", "Mesh",
+"Client", "all ports".
+
+Getestet per bind-mount auf 26100312bro: grw-cudyWR3000Sv1-80e0 (DSA,
+lan1-4 M, wan V) und dias-WR3600-test-1b8c (swconfig, LAN Mesh M, WAN
+Uplink/VPN V), in Chromium dargestellt.
+
+Setzt auf dem Stand nach statuspage-distance-wired.sh auf.
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -233,6 +233,60 @@
+ 		end
+ 		table.sort(ethlinks, function(a, b) return a.name < b.name end)
+ 	end
++	-- Rolle je Port aus gluon.iface_* (Konfiguration, nicht live): ein
++	-- Buchstabe je Rolle, V = uplink (dort laeuft das Mesh-VPN), M = mesh,
++	-- C = client. "/lan" usw. steht fuer die Ports in sysconfig lan_ifname.
++	-- Ports, die respondd nicht einzeln kennt (swconfig: LAN ist eth0.1 am
++	-- Switch), bekommen eine Zeile je Gruppe statt je Port.
++	local ROLE_LETTER = { uplink = 'V', mesh = 'M', client = 'C' }
++	local ROLE_ORDER = { 'uplink', 'mesh', 'client' }
++	local role_title = {
++		uplink = nf.translate('Uplink/VPN'),
++		mesh = nf.translate('Mesh'),
++		client = nf.translate('Client'),
++	}
++	local port_roles, role_groups = {}, {}
++	local function role_cell(set)
++		local letters, titles = {}, {}
++		for _, r in ipairs(ROLE_ORDER) do
++			if set[r] then
++				table.insert(letters, ROLE_LETTER[r])
++				table.insert(titles, role_title[r])
++			end
++		end
++		if not letters[1] then return nil end
++		return table.concat(letters, ' '), table.concat(titles, ', ')
++	end
++	do
++		local known = {}
++		for _, l in ipairs(ethlinks) do known[l.name] = true end
++		uci:foreach('gluon', 'interface', function(sec)
++			local name = sec.name
++			if type(name) == 'table' then name = table.concat(name, ' ') end
++			if type(name) ~= 'string' then return end
++			if name:sub(1, 1) == '/' then
++				name = util.readfile('/lib/gluon/core/sysconfig/' .. name:sub(2) .. '_ifname') or ''
++			end
++			local roles = sec.role
++			if type(roles) ~= 'table' then roles = { roles } end
++			local set, ports, unknown = {}, {}, false
++			for _, r in ipairs(roles) do set[r] = true end
++			for port in name:gmatch('%S+') do
++				table.insert(ports, port)
++				port_roles[port] = port_roles[port] or {}
++				for r in pairs(set) do port_roles[port][r] = true end
++				if not known[port] then unknown = true end
++			end
++			local letters, titles = role_cell(set)
++			if unknown and letters then
++				local label = sec['.name']:gsub('^iface_', '')
++				label = (label == 'lan' or label == 'wan') and label:upper() or label
++				table.insert(role_groups, { label = label, ports = table.concat(ports, ' '),
++					letters = letters, titles = titles })
++			end
++		end)
++		table.sort(role_groups, function(a, b) return a.label < b.label end)
++	end
+ 	-- Temperaturen aus neanderfunk-respondd (statistics.neanderfunk.temperature,
+ 	-- Sensor -> Grad C), "soc" zuerst, dann die WLAN-Chips usw. nach Namen.
+ 	-- Ein Sensor, der beim Laden fehlt, erscheint erst nach F5; einer, der
+@@ -509,14 +563,23 @@
+ 					</table>
+ 				<%- end %>
+ 
+-				<% if ethlinks[1] then -%>
++				<% if ethlinks[1] or role_groups[1] then -%>
+ 					<h3><%| nf.translate('Ethernet') %></h3>
+ 					<table>
+ 						<tbody>
+ 							<% for _, l in ipairs(ethlinks) do -%>
++								<% local letters, titles = role_cell(port_roles[l.name] or {}) -%>
+ 								<tr>
+ 									<th><%| l.name %></th>
+ 									<td><%= live('neanderfunk/ethernet/' .. l.name, format_link(l.link), 'nfLink') %></td>
++									<td<%= attr('title', titles) %>><%| letters or '' %></td>
++								</tr>
++							<%- end %>
++							<% for _, g in ipairs(role_groups) do -%>
++								<tr>
++									<th<%= attr('title', g.ports) %>><%| g.label %></th>
++									<td<%= attr('title', nf.translate('all ports')) %>><%| g.titles %></td>
++									<td<%= attr('title', g.titles) %>><%| g.letters %></td>
+ 								</tr>
+ 							<%- end %>
+ 						</tbody>

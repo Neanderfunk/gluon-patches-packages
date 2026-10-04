@@ -103,3 +103,20 @@ allein nutzbar bleibt.
 Skripte (`apply.sh`, `lib-patch.sh`, `*/*.sh`): BSD-3-Clause, siehe
 `LICENSE`. Patchdateien stehen unter der Lizenz des Projekts, das sie
 ändern: Gluon BSD-2-Clause.
+
+### status-page/statuspage-portroles
+
+Rolle je Ethernet-Port in der Statusseite (Wunsch adorfer 04.10.2026): bei DSA
+eine dritte Spalte je Port, V = Uplink/VPN, M = Mesh, C = Client (mehrere
+"V M"), ausgeschrieben im Tooltip. Bei swconfig-Geraeten (WDR3600 u. a.), wo
+respondd keine einzelnen Ports kennt, eine Zeile je Gruppe ("LAN Mesh M",
+"WAN Uplink/VPN V"). Quelle ist gluon.iface_* beim Laden der Seite. Texte im
+Katalog neanderfunk-status-page. Getestet am Cudy WR3000S (DSA) und WDR3600
+(swconfig).
+
+Nebenbei (04.10.2026): Die Merkmale von statuspage-moredetails,
+-hwdetails und -ethlinks standen nach der ganzen Kette nicht mehr im Baum
+(spaetere Patches schreiben die Stellen um). Ein zweiter Lauf auf demselben
+Baum brach deshalb ab. Jetzt Merkmale, die nach dem Patch und im Endstand
+stehen (mesh_if.other, cpu_model, ethlinks); doppelt angewendet geprueft.
+
