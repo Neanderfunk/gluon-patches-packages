@@ -120,3 +120,9 @@ Nebenbei (04.10.2026): Die Merkmale von statuspage-moredetails,
 Baum brach deshalb ab. Jetzt Merkmale, die nach dem Patch und im Endstand
 stehen (mesh_if.other, cpu_model, ethlinks); doppelt angewendet geprueft.
 
+### status-page/statuspage-linkformat
+
+Ethernet-Link kurz wie auf Switch-Aufklebern (Wunsch adorfer 04.10.2026):
+"1000 FDX" / "100 HDX" mit bekannter Duplex-Angabe (DSA, eigene Karten),
+sonst "1000TX". Lua-Format und JS-Formatierer nfLink (auch min.js).
+
