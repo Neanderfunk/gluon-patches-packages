@@ -10,11 +10,20 @@
 
 echo "Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite"
 
-apply_patch "$PATCH_DIR/setup-mode-captive.patch" \
-  "package/gluon-config-mode-core/files/lib/gluon/setup-mode/rc.d/S50uhttpd" \
-  '/cgi-bin/portal'
+# Zweiter Lauf auf demselben Baum: setup-mode-wifi aendert danach das hier
+# angelegte Portal-CGI. Dann passt der Patch weder vor- noch rueckwaerts, und
+# apply_patch ersetzt die angelegte Datei, bevor es nach dem Merkmal sieht -
+# und scheitert am schon gepatchten S50uhttpd (Build-Abbruch). Darum hier
+# vorab: Merkmal in S50uhttpd und Portal-CGI vorhanden = schon angewendet.
+UHTTPD="package/gluon-config-mode-core/files/lib/gluon/setup-mode/rc.d/S50uhttpd"
+PORTAL="package/gluon-config-mode-core/files/lib/gluon/config-mode/www/cgi-bin/portal"
+if grep -qF '/cgi-bin/portal' "$UHTTPD" 2>/dev/null && [ -f "$PORTAL" ]; then
+  echo "  $PATCH_DIR/setup-mode-captive.patch: bereits angewendet (S50uhttpd und portal vorhanden)."
+else
+  apply_patch "$PATCH_DIR/setup-mode-captive.patch" "$UHTTPD" '/cgi-bin/portal'
+fi
 
 # patch legt neue Dateien ohne Ausfuehrungsrecht an; uhttpd startet ein CGI
 # nur, wenn es ausfuehrbar ist. Gluon kopiert files/ mit "cp -fpR", das Recht
 # kommt also ins Image.
-chmod 755 "package/gluon-config-mode-core/files/lib/gluon/config-mode/www/cgi-bin/portal"
+chmod 755 "$PORTAL"
