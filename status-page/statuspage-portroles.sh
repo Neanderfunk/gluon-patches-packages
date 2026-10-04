@@ -14,4 +14,4 @@ echo "Gluon-Statuspage: Rolle je Ethernet-Port"
 
 apply_patch "$PATCH_DIR/statuspage-portroles.patch" \
   "package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html" \
-  'ROLE_LETTER'
+  'ROLE_ORDER'

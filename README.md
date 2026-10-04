@@ -107,10 +107,10 @@ Skripte (`apply.sh`, `lib-patch.sh`, `*/*.sh`): BSD-3-Clause, siehe
 ### status-page/statuspage-portroles
 
 Rolle je Ethernet-Port in der Statusseite (Wunsch adorfer 04.10.2026): bei DSA
-eine dritte Spalte je Port, V = Uplink/VPN, M = Mesh, C = Client (mehrere
-"V M"), ausgeschrieben im Tooltip. Bei swconfig-Geraeten (WDR3600 u. a.), wo
-respondd keine einzelnen Ports kennt, eine Zeile je Gruppe ("LAN Mesh M",
-"WAN Uplink/VPN V"). Quelle ist gluon.iface_* beim Laden der Seite. Texte im
+eine dritte Spalte je Port mit der Rolle ausgeschrieben ("Uplink/VPN", "Mesh",
+"Client", mehrere durch Komma). Bei swconfig-Geraeten (WDR3600 u. a.), wo
+respondd keine einzelnen Ports kennt, eine Zeile je Gruppe ("LAN Mesh",
+"WAN Uplink/VPN"). Quelle ist gluon.iface_* beim Laden der Seite. Texte im
 Katalog neanderfunk-status-page. Getestet am Cudy WR3000S (DSA) und WDR3600
 (swconfig).
 
