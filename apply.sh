@@ -29,6 +29,8 @@ PRE_UPDATE=()
 
 POST_UPDATE=(
   mesh-vpn/tunneldigger-watchdog-shell.sh       # tunneldigger-watchdog: Shell statt Lua, ohne WAN-IPv4 kein Neustart
+  status-page/statuspage-neanderfunk.sh         # Statusseite: Neanderfunk-Anbauten, SSID live, Gateway-Name
+  status-page/statuspage-darkmode.sh            # Statusseite: Darkmode nach prefers-color-scheme
 )
 
 PHASE="${1:-}"

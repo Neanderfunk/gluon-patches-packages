@@ -44,3 +44,17 @@ damit es ausführbar (100755) ankommt.
 
 Gegenstück im Client selbst (Reinit-Pause, kein modprobe-Sturm, `f9a3053`)
 ist ein Patch am Paketfeed-Modul und liegt in `gluon-patches-fixes`.
+
+### status-page/statuspage-neanderfunk
+
+Die Neanderfunk-Anbauten der Statusseite aus v2025.1.x in einem Patch
+(moredetails, ssid, hwdetails, ethlinks, ssidchanger-zaehler, respondd,
+gateway-name, distance-wired, ?v= an CSS/JS). Ohne OWE/privates WLAN und
+ohne eigenen Katalog (Image nur Englisch). Braucht im Image
+`neanderfunk-respondd` (Werte, SSID live per nl80211) und
+`neanderfunk-status-page` (Gateway-Name); ohne sie fehlen die Zeilen bzw.
+steht die Gateway-MAC da. Einzelheiten im Kopf des Patches.
+
+### status-page/statuspage-darkmode
+
+Unverändert aus v2025.1.x, passt auf 2021.1 ohne Anpassung.
