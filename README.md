@@ -58,3 +58,10 @@ steht die Gateway-MAC da. Einzelheiten im Kopf des Patches.
 ### status-page/statuspage-darkmode
 
 Unverändert aus v2025.1.x, passt auf 2021.1 ohne Anpassung.
+
+### setup-mode-network/
+
+`setup-mode-hostnames`, `setup-mode-captive`, `setup-mode-wifi` unverändert
+aus v2025.1.x: S60dnsmasq, S50uhttpd und das Portal-CGI sind in Gluon 2021.1
+gleich. `setup-mode-wifi` bindet den ersten dnsmasq an br-setup, damit
+`neanderfunk-setup-wifi` einen zweiten an br-setupwifi starten kann.
