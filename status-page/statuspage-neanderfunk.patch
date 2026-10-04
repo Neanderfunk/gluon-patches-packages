@@ -18,7 +18,13 @@ Zusaetzlich zu Gluon:
   hostapd-Konfigdatei, die der ssid-changer auch dann umschreibt, wenn
   hostapd den HUP ignoriert), Zustand der Offline-SSID mit den Zaehlern seit
   dem Boot.
-- Ethernet: Link und Geschwindigkeit je Port.
+- Ethernet: Link je Port kurz wie auf Switch-Aufklebern, "100 FDX" /
+  "100 HDX" (Duplex aus ethtool, also bei eigenen Netzwerk-Interfaces wie WAN
+  eth1 am WR841N v9), ohne Duplex-Angabe "100TX"; dazu die Rolle je Port
+  (WAN "Uplink/VPN" bzw. "Uplink/VPN, Mesh" mit mesh_wan, LAN "Mesh" mit
+  mesh_lan, sonst "Client"). LAN hinter dem Switch (eth0.1) kennt respondd
+  nicht einzeln, dafuer eine Zeile "LAN  Mesh" (wie 2025.1 statuspage-
+  portroles/-linkformat, Wunsch adorfer 04.10.2026).
 - Live: alles aus neanderfunk-respondd wird beim Laden gerendert und danach
   ueber die EventSource von /cgi-bin/dyn/statistics nachgesetzt
   (data-statistics). Ohne neanderfunk-respondd fehlen diese Zeilen.
@@ -47,7 +53,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  	local ubus = require 'ubus'
  	local unistd = require 'posix.unistd'
  	local util = require 'gluon.util'
-@@ -39,6 +40,43 @@
+@@ -39,6 +40,53 @@
  		return interfaces
  	end
  
@@ -74,13 +80,23 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
 +		if type(l) ~= 'table' then return '-' end
 +		if not l.carrier then return '\226\128\147' end
 +		if not l.speed or l.speed <= 0 then return 'up' end
-+		local s = l.speed .. ' MBit/s'
-+		if l.duplex == 'half' then
-+			s = s .. ' (half duplex)'
-+		elseif (l.possible or 0) > l.speed then
++		local s = l.speed .. ((l.duplex == 'full' and ' FDX') or (l.duplex == 'half' and ' HDX') or 'TX')
++		if (l.possible or 0) > l.speed then
 +			s = s .. ' (' .. l.possible .. ' possible)'
 +		end
 +		return s
++	end
++
++	-- Rolle je Port wie Gluon 2021.1 sie fuehrt: WAN uplink (+ mesh mit
++	-- network.mesh_wan), LAN mesh mit network.mesh_lan, sonst client.
++	-- Ports aus sysconfig wan_ifname/lan_ifname; was respondd nicht einzeln
++	-- kennt (LAN hinter dem Switch: eth0.1), steht als Zeile je Gruppe.
++	local function role_text(group)
++		local function on(sec) return uci:get('network', sec) and uci:get('network', sec, 'disabled') ~= '1' end
++		if group == 'wan' then
++			return on('mesh_wan') and 'Uplink/VPN, Mesh' or 'Uplink/VPN'
++		end
++		return on('mesh_lan') and 'Mesh' or 'Client'
 +	end
 +
 +	local function live(key, value, format)
@@ -91,7 +107,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  	local function get_radios()
  		local ret = {}
  
-@@ -48,6 +86,7 @@
+@@ -48,6 +96,7 @@
  				table.insert(ret, {
  					name = radio['.name'],
  					channel = channel,
@@ -99,7 +115,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  				})
  			end
  		end)
-@@ -80,6 +119,53 @@
+@@ -80,6 +129,69 @@
  	ubus.close(uconn)
  
  	local radios = get_radios()
@@ -150,10 +166,26 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
 +		end
 +	end
 +	local release = (util.readfile('/lib/gluon/release') or ''):gsub('%s+', '')
++	local port_role, role_groups = {}, {}
++	do
++		local known = {}
++		for _, l in ipairs(ethlinks) do known[l.name] = true end
++		for _, g in ipairs({ 'lan', 'wan' }) do
++			local unknown, ports = false, {}
++			for p in (util.readfile('/lib/gluon/core/sysconfig/' .. g .. '_ifname') or ''):gmatch('%S+') do
++				port_role[p] = role_text(g)
++				table.insert(ports, p)
++				if not known[p] then unknown = true end
++			end
++			if unknown then
++				table.insert(role_groups, { label = g:upper(), ports = table.concat(ports, ' '), role = role_text(g) })
++			end
++		end
++	end
  
  	local function sorted(t)
  		t = {unpack(t)}
-@@ -125,10 +211,11 @@
+@@ -125,10 +237,11 @@
  	<head>
  		<meta charset="utf-8" />
  		<meta name="viewport" content="width=device-width, user-scalable=no" />
@@ -166,7 +198,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  	</head>
  	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>"<%=
  		attr('data-translations', translations) ..
-@@ -152,9 +239,23 @@
+@@ -152,9 +265,23 @@
  							<%| nodeinfo.location.latitude %>, <%| nodeinfo.location.longitude %>
  						</a></dd>
  					<%- end %>
@@ -191,7 +223,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  					<dt><%:Firmware%></dt><dd><%| nodeinfo.software.firmware.release %></dd>
  					<% if nodeinfo.network.mesh_vpn then -%>
  						<dt><%:Mesh VPN%></dt>
-@@ -163,6 +264,9 @@
+@@ -163,6 +290,9 @@
  							<% if nodeinfo.network.mesh_vpn.provider then -%>
  							<br /><%| nodeinfo.network.mesh_vpn.provider %>
  							<%- end %>
@@ -201,7 +233,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  						</dd>
  						<% if nodeinfo.network.mesh_vpn.bandwidth_limit.enabled then -%>
  						<dt><%:Bandwidth limit%></dt>
-@@ -176,6 +280,9 @@
+@@ -176,6 +306,9 @@
  						</dd>
  						<%- end %>
  					<%- end %>
@@ -211,7 +243,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  					<dt><%:Site%></dt><dd><%| site.site_name() %></dd>
  					<% if nodeinfo.system.domain_code then -%>
  						<dt><%:Domain%></dt>
-@@ -211,9 +318,12 @@
+@@ -211,9 +344,12 @@
  				<table>
  					<tr><th><%:Uptime%></th><td><%= statistics('uptime', 'time') %></td></tr>
  					<tr><th><%:Load average%></th><td><%= statistics('loadavg', 'decimal') %></td></tr>
@@ -225,7 +257,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  				</table>
  
  				<h3><%:Clients%></h3>
-@@ -226,9 +336,41 @@
+@@ -226,9 +362,48 @@
  					<h3><%:Radios%></h3>
  					<table>
  						<% for _, radio in ipairs(radios) do -%>
@@ -258,17 +290,24 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
 +					</table>
 +				<%- end %>
 +
-+				<% if ethlinks[1] then -%>
++				<% if ethlinks[1] or role_groups[1] then -%>
 +					<h3>Ethernet</h3>
 +					<table>
 +						<% for _, l in ipairs(ethlinks) do -%>
 +							<tr>
 +								<th><%| l.name %></th>
 +								<td><%= live('neanderfunk/ethernet/' .. l.name, format_link(l.link), 'nfLink') %></td>
++								<td><%| port_role[l.name] or '' %></td>
++							</tr>
++						<%- end %>
++						<% for _, g in ipairs(role_groups) do -%>
++							<tr>
++								<th title="<%| g.ports %>"><%| g.label %></th>
++								<td title="all ports"><%| g.role %></td>
  							</tr>
  						<%- end %>
  					</table>
-@@ -278,6 +420,6 @@
+@@ -278,6 +453,6 @@
  				%>
  			</div>
  		</div>
@@ -279,7 +318,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
 diff --git a/package/gluon-status-page/javascript/status-page.js b/package/gluon-status-page/javascript/status-page.js
 --- a/package/gluon-status-page/javascript/status-page.js
 +++ b/package/gluon-status-page/javascript/status-page.js
-@@ -67,6 +67,58 @@
+@@ -67,6 +67,57 @@
  		'id': function(value) {
  			return value;
  		},
@@ -291,10 +330,9 @@ diff --git a/package/gluon-status-page/javascript/status-page.js b/package/gluon
 +				return '\u2013';
 +			if (!(value.speed > 0))
 +				return 'up';
-+			var s = value.speed + ' MBit/s';
-+			if (value.duplex === 'half')
-+				s += ' (half duplex)';
-+			else if (value.possible > value.speed)
++			// "100 FDX" / "100 HDX", ohne bekannte Duplex-Angabe "100TX"
++			var s = value.speed + (value.duplex === 'full' ? ' FDX' : value.duplex === 'half' ? ' HDX' : 'TX');
++			if (value.possible > value.speed)
 +				s += ' (' + value.possible + ' possible)';
 +			return s;
 +		},
@@ -338,7 +376,7 @@ diff --git a/package/gluon-status-page/javascript/status-page.js b/package/gluon
  		'decimal': function(value) {
  			return formatNumberFixed(value, 2);
  		},
-@@ -649,7 +701,8 @@
+@@ -649,7 +700,8 @@
  
  				hostname.textContent = nodeinfo.hostname;
  
@@ -354,5 +392,5 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/www/static/st
 @@ -1 +1 @@
 -"use strict";!function(){var i=JSON.parse(document.body.getAttribute("data-translations"));function r(t,e){return t.toFixed(e).replace(/\./,i["."])}function a(t,e){e--;for(var n=t;10<=n&&0<e;n/=10)e--;return r(t,e)}function o(t){return function(t,e,n){var r=0;if(void 0===n)return"- ";for(;e<n&&r<t.length-1;)n/=e,r++;return(n=a(n,3))+" "+t[r]}(["","K","M","G","T"],1024,t)}String.prototype.sprintf=function(){var t=0,e=arguments;return this.replace(/%s/g,function(){return e[t++]})};var u={id:function(t){return t},decimal:function(t){return r(t,2)},percent:function(t){return i["%s used"].sprintf(a(100*t,3)+"%")},memory:function(t){t=1-t.available/t.total;return u.percent(t)},time:function(t){var e=Math.round(t/60),n=Math.floor(e/1440),r=Math.floor(e%1440/60),e=Math.floor(e%60),t="";return 1===n?t+=i["1 day"]+", ":1<n&&(t+=i["%s days"].sprintf(n)+", "),t+=r+":",e<10&&(t+="0"),t+=e},packetsDiff:function(t,e,n){if(0<n)return n=(t-e)/n,i["%s packets/s"].sprintf(r(n,0))},bytesDiff:function(t,e,n){if(0<n)return o(8*((t-e)/n))+"bps"},bytes:function(t){return o(t)+"B"},neighbour:function(t){if(!t)return"";for(var e in c){var n=c[e].lookup_neigh(t);if(n){var r=document.createElement("span");r.appendChild(document.createTextNode("via "));var i=document.createElement("a");return i.href="http://["+n.get_addr()+"]/",i.textContent=n.get_hostname(),r.appendChild(i),r.appendChild(document.createTextNode(" ("+e+")")),r}}return"via "+t+" (unknown iface)"}};function s(e,t){return t.split("/").forEach(function(t){e=e&&e[t]}),e}function d(t,e){var n=new EventSource(t),r={};n.onmessage=function(t){t=JSON.parse(t.data);e(t,r),r=t},n.onerror=function(){n.close(),window.setTimeout(function(){d(t,e)},3e3)}}var x,k=document.body.getAttribute("data-node-address");try{x=JSON.parse(document.body.getAttribute("data-node-location"))}catch(t){}function t(t){var e=document.getElementById("mesh-vpn");if(t){e.style.display="";for(var r=document.getElementById("mesh-vpn-peers");r.lastChild;)r.removeChild(r.lastChild);t=function e(n,r){return Object.keys(r.peers||{}).forEach(function(t){n.push([t,r.peers[t]])}),Object.keys(r.groups||{}).forEach(function(t){e(n,r.groups[t])}),n}([],t);t.sort(),t.forEach(function(t){var e=document.createElement("tr"),n=document.createElement("th");n.textContent=t[0],e.appendChild(n);n=document.createElement("td");t[1]?n.textContent=i.connected+" ("+u.time(t[1].established)+")":n.textContent=i["not connected"],e.appendChild(n),r.appendChild(e)})}else e.style.display="none"}var e=document.querySelectorAll("[data-statistics]");d("/cgi-bin/dyn/statistics",function(a,o){var c=a.uptime-o.uptime;e.forEach(function(t){var e=t.getAttribute("data-statistics"),n=t.getAttribute("data-format"),r=s(o,e),e=s(a,e);try{var i=u[n](e,r,c);"object"==typeof i?(t.lastChild&&t.removeChild(t.lastChild),t.appendChild(i)):t.textContent=i}catch(t){console.error(t)}});try{t(a.mesh_vpn)}catch(t){console.error(t)}});var c={};function A(n){var r=document.createElement("canvas"),i=r.getContext("2d"),a=null;return{canvas:r,highlight:!1,resize:function(t,e){var n;try{n=i.getImageData(0,0,t,e)}catch(t){}r.width=t,r.height=e,n&&i.putImageData(n,0,0)},draw:function(t,e){e=e(a);i.clearRect(t,0,5,r.height),e&&(t=t,e=e,i.beginPath(),i.fillStyle=n,i.arc(t,e,1.2,0,2*Math.PI,!1),i.closePath(),i.fill())},set:function(t){a=t}}}function h(){var i=-100,a=0,n=0,r=[],o=document.createElement("canvas");o.className="signalgraph",o.height=200;var c=o.getContext("2d");function t(){o.width=o.clientWidth,r.forEach(function(t){t.resize(o.width,o.height)})}function u(){var e;0!==o.clientWidth&&(o.width!==o.clientWidth&&t(),c.clearRect(0,0,o.width,o.height),e=!1,r.forEach(function(t){t.highlight&&(e=!0)}),c.save(),r.forEach(function(t){e&&(c.globalAlpha=.2),t.highlight&&(c.globalAlpha=1),t.draw(n,function(t){return e=o.height,(1-(t-i)/(a-i))*e;var e}),c.drawImage(t.canvas,0,0)}),c.restore(),c.save(),c.beginPath(),c.strokeStyle="rgba(255, 180, 0, 0.15)",c.lineWidth=5,c.moveTo(n+2.5,0),c.lineTo(n+2.5,o.height),c.stroke(),function(){var t=Math.floor(o.height/40);c.save(),c.lineWidth=.5,c.strokeStyle="rgba(0, 0, 0, 0.25)",c.fillStyle="rgba(0, 0, 0, 0.5)",c.textAlign="end",c.textBaseline="bottom",c.beginPath();for(var e=0;e<t;e++){var n=o.height-40*e;c.moveTo(0,n-.5),c.lineTo(o.width,n-.5);var r=Math.round((r=o.height,(i*n+a*(r-n))/r))+" dBm";c.save(),c.strokeStyle="rgba(255, 255, 255, 0.9)",c.lineWidth=4,c.miterLimit=2,c.strokeText(r,o.width-5,n-2.5),c.fillText(r,o.width-5,n-2.5),c.restore()}c.stroke(),c.strokeStyle="rgba(0, 0, 0, 0.83)",c.lineWidth=1.5,c.strokeRect(.5,.5,o.width-1,o.height-1),c.restore()}())}t(),window.addEventListener("resize",u);var s=0;return window.requestAnimationFrame(function t(e){40<e-s&&(u(),n=(n+1)%o.width,s=e),window.requestAnimationFrame(t)}),{el:o,addSignal:function(t){r.push(t),t.resize(o.width,o.height)},removeSignal:function(t){r.splice(r.indexOf(t),1)}}}function f(t,o,e,n){var r,i=t.table.firstElementChild,a=t.table.insertRow(),c=a.insertCell();c.setAttribute("data-label",i.children[0].textContent),t.wireless&&((r=document.createElement("span")).textContent="⬤ ",r.style.color=e,c.appendChild(r));var u=document.createElement("span");u.textContent=o,c.appendChild(u);var s={};for(var l,d,h,f,g,v,p,m,b,C=0;C<i.children.length;C++)l=i.children[C],f=h=d=void 0,(f=l.getAttribute("data-key"))&&(d=l.getAttribute("data-suffix")||"",(h=a.insertCell()).textContent="-",h.setAttribute("data-label",l.textContent),s[f]={td:h,suffix:d});function y(){b&&window.clearTimeout(b),b=window.setTimeout(function(){m&&t.signalgraph.removeSignal(m),a.parentNode.removeChild(a),n()},6e4)}function w(t){t=function(t){"::"==(t="::"==t.slice(0,2)?"0"+t:t).slice(-2)&&(t+="0");for(var e=t.split(":"),n=e.length,r=[],i=0;i<e.length;i++){var a=e[i];if(""===a)for(;n++<=8;)r.push(0);else{if(!/^[a-f0-9]{1,4}$/i.test(a))return;r.push(parseInt(a,16))}}return r}(t);if(t){var e="";return t.forEach(function(t){e+=("0000000000000000"+t.toString(2)).slice(-16)}),e}}function E(t){var r=w(k);if(t&&t[0]){(t=t.map(function(t){var e=w(t);if(!e)return[-1];var n=0;return[n=r?function(t,e){for(var n=0;n<t.length&&n<e.length&&t[n]===e[n];n++);return n}(r,e):n,e,t]})).sort(function(t,e){return t[0]<e[0]?1:t[0]>e[0]||t[1]<e[1]?-1:t[1]>e[1]?1:0});t=t[0][2];return t&&!/^fe80:/i.test(t)?t:void 0}}return t.wireless&&((g=a.insertCell()).textContent="-",g.setAttribute("data-label",i.children[Object.keys(s).length+1].textContent),(v=a.insertCell()).textContent="-",v.setAttribute("data-label",i.children[Object.keys(s).length+2].textContent),(p=a.insertCell()).textContent="-",p.setAttribute("data-label",i.children[Object.keys(s).length+3].textContent),m=A(e),t.signalgraph.addSignal(m)),a.onmouseenter=function(){a.classList.add("highlight"),m&&(m.highlight=!0)},a.onmouseleave=function(){a.classList.remove("highlight"),m&&(m.highlight=!1)},y(),{get_hostname:function(){return u.textContent},get_addr:function(){return o},update_nodeinfo:function(t){var e,n,r,i,a;(o=E(t.network.addresses))&&("span"===u.nodeName.toLowerCase()&&(a=u,u=document.createElement("a"),a.parentNode.replaceChild(u,a)),u.href="http://["+o+"]/"),u.textContent=t.hostname,x&&t.location&&(e=x.latitude,n=x.longitude,r=t.location.latitude,i=t.location.longitude,a=Math.PI/180,t=(r*=a)-(e*=a),n=(i*=a)-(n*=a),r=Math.sin(t/2)*Math.sin(t/2)+Math.sin(n/2)*Math.sin(n/2)*Math.cos(e)*Math.cos(r),r=6372.8*(2*Math.asin(Math.sqrt(r))),v.textContent=Math.round(1e3*r)+" m"),y()},update_mesh:function(n){Object.keys(s).forEach(function(t){var e=s[t];e.td.textContent=n[t]+e.suffix}),y()},update_wifi:function(t){g.textContent=t.signal,p.textContent=Math.round(t.inactive/1e3)+" s",a.classList.toggle("inactive",200<t.inactive),m.set(200<t.inactive?null:t.signal),y()}}}function l(t,e,n){var r,a={};n&&(r=h(),t.appendChild(r.el));var i={table:t.firstElementChild,signalgraph:r,ifname:e,wireless:n},o=!1,c={},u=[];function s(){var t;o||(o=!0,(t=new EventSource("/cgi-bin/dyn/neighbours-nodeinfo?"+encodeURIComponent(e))).addEventListener("neighbour",function(t){try{var n=JSON.parse(t.data);r=[],i=n.network.mesh,Object.keys(i).forEach(function(t){var e=i[t].interfaces;Object.keys(e).forEach(function(t){e[t].forEach(function(t){r.push(t)})})}),r.forEach(function(t){var e=a[t];if(e){delete c[t];try{e.update_nodeinfo(n)}catch(t){console.error(t)}}})}catch(t){console.error(t)}var r,i},!1),t.onerror=function(){t.close(),o=!1,Object.keys(c).forEach(function(t){0<c[t]&&(c[t]--,s())})})}function l(t){var e=a[t];return e||(c[t]=3,e=a[t]=f(i,t,(u=u[0]?u:["#396AB1","#DA7C30","#3E9651","#CC2529","#535154","#6B4C9A","#922428","#948B3D"]).shift(),function(){delete c[t],delete a[t]}),s()),e}return n&&d("/cgi-bin/dyn/stations?"+encodeURIComponent(e),function(n){Object.keys(n).forEach(function(t){var e=n[t];l(t).update_wifi(e)})}),{get_neigh:l,lookup_neigh:function(t){return a[t]}}}document.querySelectorAll("[data-interface]").forEach(function(t){var e=t.getAttribute("data-interface"),n=(t.getAttribute("data-interface-address"),!!t.getAttribute("data-interface-wireless"));c[e]=l(t,e,n)});var n=document.body.getAttribute("data-mesh-provider");n&&d(n,function(r){Object.keys(r).forEach(function(t){var e=r[t],n=c[e.ifname];n&&n.get_neigh(t).update_mesh(e)})})}();
 \ No newline at end of file
-+"use strict";!function(){var t=JSON.parse(document.body.getAttribute("data-translations"));function e(e,n){return e.toFixed(n).replace(/\./,t["."])}function n(t,n){n--;for(var r=t;r>=10&&n>0;r/=10)n--;return e(t,n)}function r(t){return function(t,e,r){var i=0;if(void 0===r)return"- ";for(;r>e&&i<t.length-1;)r/=e,i++;return(r=n(r,3))+" "+t[i]}(["","K","M","G","T"],1024,t)}String.prototype.sprintf=function(){var t=0,e=arguments;return this.replace(/%s/g,function(){return e[t++]})};var i,a,o={id:function(t){return t},nfLink:function(t){if(!t||"object"!=typeof t)return"-";if(!t.carrier)return"–";if(!(t.speed>0))return"up";var e=t.speed+" MBit/s";return"half"===t.duplex?e+=" (half duplex)":t.possible>t.speed&&(e+=" ("+t.possible+" possible)"),e},nfOffline:function(t){return 1==t?"offline":0==t?"online":"–"},nfTemp:function(t){return"number"==typeof t?Math.round(t)+" °C":"–"},nfSsid:function(t){return t||"–"},gateway:(i={},a={},function(t){if(!t)return"";if(!(i[t]||a[t]>Date.now())){a[t]=Date.now()+3e5;var e=new XMLHttpRequest;e.onload=function(){var n=200===e.status?e.responseText.trim():"";n&&(i[t]=n)},e.open("GET","/cgi-bin/dyn/gateway-name?"+encodeURIComponent(t)),e.send()}if(!i[t])return t;var n=document.createElement("span");return n.title=t,n.textContent=i[t],n}),decimal:function(t){return e(t,2)},percent:function(e){return t["%s used"].sprintf(n(100*e,3)+"%")},memory:function(t){var e=1-t.available/t.total;return o.percent(e)},time:function(e){var n=Math.round(e/60),r=Math.floor(n/1440),i=Math.floor(n%1440/60);n=Math.floor(n%60);var a="";return 1===r?a+=t["1 day"]+", ":r>1&&(a+=t["%s days"].sprintf(r)+", "),a+=i+":",n<10&&(a+="0"),a+=n},packetsDiff:function(n,r,i){if(i>0)return a=(n-r)/i,t["%s packets/s"].sprintf(e(a,0));var a},bytesDiff:function(t,e,n){if(n>0)return r(8*((t-e)/n))+"bps"},bytes:function(t){return r(t)+"B"},neighbour:function(t){if(!t)return"";for(var e in d){var n=d[e].lookup_neigh(t);if(n){var r=document.createElement("span");r.appendChild(document.createTextNode("via "));var i=document.createElement("a");return i.href="http://["+n.get_addr()+"]/",i.textContent=n.get_hostname(),r.appendChild(i),r.appendChild(document.createTextNode(" ("+e+")")),r}}return"via "+t+" (unknown iface)"}};function c(t,e){return e.split("/").forEach(function(e){t&&(t=t[e])}),t}function u(t,e){var n=new EventSource(t),r={};n.onmessage=function(t){var n=JSON.parse(t.data);e(n,r),r=n},n.onerror=function(){n.close(),window.setTimeout(function(){u(t,e)},3e3)}}var s,l=document.body.getAttribute("data-node-address");try{s=JSON.parse(document.body.getAttribute("data-node-location"))}catch(t){}var f=document.querySelectorAll("[data-statistics]");u("/cgi-bin/dyn/statistics",function(e,n){var r=e.uptime-n.uptime;f.forEach(function(t){var i=t.getAttribute("data-statistics"),a=t.getAttribute("data-format"),u=c(n,i),s=c(e,i);try{var l=o[a](s,u,r);if("object"==typeof l)t.lastChild&&t.removeChild(t.lastChild),t.appendChild(l);else t.textContent=l}catch(t){console.error(t)}});try{!function(e){var n=document.getElementById("mesh-vpn");if(e){n.style.display="";for(var r=document.getElementById("mesh-vpn-peers");r.lastChild;)r.removeChild(r.lastChild);var i=function t(e,n){return Object.keys(n.peers||{}).forEach(function(t){e.push([t,n.peers[t]])}),Object.keys(n.groups||{}).forEach(function(r){t(e,n.groups[r])}),e}([],e);i.sort(),i.forEach(function(e){var n=document.createElement("tr"),i=document.createElement("th");i.textContent=e[0],n.appendChild(i);var a=document.createElement("td");e[1]?a.textContent=t.connected+" ("+o.time(e[1].established)+")":a.textContent=t["not connected"],n.appendChild(a),r.appendChild(n)})}else n.style.display="none"}(e.mesh_vpn)}catch(t){console.error(t)}});var d={};function h(t){var e=document.createElement("canvas"),n=e.getContext("2d"),r=null;return{canvas:e,highlight:!1,resize:function(t,r){var i;try{i=n.getImageData(0,0,t,r)}catch(t){}e.width=t,e.height=r,i&&n.putImageData(i,0,0)},draw:function(i,a){var o=a(r);n.clearRect(i,0,5,e.height),o&&function(e,r){n.beginPath(),n.fillStyle=t,n.arc(e,r,1.2,0,2*Math.PI,!1),n.closePath(),n.fill()}(i,o)},set:function(t){r=t}}}function g(){var t=0,e=[],n=document.createElement("canvas");n.className="signalgraph",n.height=200;var r=n.getContext("2d");function i(t,e,n,r){return(e*t+n*(r-t))/r}function a(){n.width=n.clientWidth,e.forEach(function(t){t.resize(n.width,n.height)})}function o(){if(0!==n.clientWidth){n.width!==n.clientWidth&&a(),r.clearRect(0,0,n.width,n.height);var o=!1;e.forEach(function(t){t.highlight&&(o=!0)}),r.save(),e.forEach(function(e){o&&(r.globalAlpha=.2),e.highlight&&(r.globalAlpha=1),e.draw(t,function(t){return function(t,e,n,r){return(1-(t-e)/(n-e))*r}(t,-100,0,n.height)}),r.drawImage(e.canvas,0,0)}),r.restore(),r.save(),r.beginPath(),r.strokeStyle="rgba(255, 180, 0, 0.15)",r.lineWidth=5,r.moveTo(t+2.5,0),r.lineTo(t+2.5,n.height),r.stroke(),function(){var t=Math.floor(n.height/40);r.save(),r.lineWidth=.5,r.strokeStyle="rgba(0, 0, 0, 0.25)",r.fillStyle="rgba(0, 0, 0, 0.5)",r.textAlign="end",r.textBaseline="bottom",r.beginPath();for(var e=0;e<t;e++){var a=n.height-40*e;r.moveTo(0,a-.5),r.lineTo(n.width,a-.5);var o=Math.round(i(a,-100,0,n.height))+" dBm";r.save(),r.strokeStyle="rgba(255, 255, 255, 0.9)",r.lineWidth=4,r.miterLimit=2,r.strokeText(o,n.width-5,a-2.5),r.fillText(o,n.width-5,a-2.5),r.restore()}r.stroke(),r.strokeStyle="rgba(0, 0, 0, 0.83)",r.lineWidth=1.5,r.strokeRect(.5,.5,n.width-1,n.height-1),r.restore()}()}}a(),window.addEventListener("resize",o);var c=0;return window.requestAnimationFrame(function e(r){r-c>40&&(o(),t=(t+1)%n.width,c=r),window.requestAnimationFrame(e)}),{el:n,addSignal:function(t){e.push(t),t.resize(n.width,n.height)},removeSignal:function(t){e.splice(e.indexOf(t),1)}}}function v(t,e,n,r){var i=t.table.firstElementChild,a=t.table.insertRow(),o=a.insertCell();if(o.setAttribute("data-label",i.children[0].textContent),t.wireless){var c=document.createElement("span");c.textContent="⬤ ",c.style.color=n,o.appendChild(c)}var u=document.createElement("span");u.textContent=e,o.appendChild(u);var f,d,g,v,p,m={};function b(t){var e=t.getAttribute("data-key");if(e){var n=t.getAttribute("data-suffix")||"",r=a.insertCell();r.textContent="-",r.setAttribute("data-label",t.textContent),m[e]={td:r,suffix:n}}}for(var C=0;C<i.children.length;C++)b(i.children[C]);function y(){p&&window.clearTimeout(p),p=window.setTimeout(function(){v&&t.signalgraph.removeSignal(v),a.parentNode.removeChild(a),r()},6e4)}function w(t){var e=function(t){"::"==t.slice(0,2)&&(t="0"+t),"::"==t.slice(-2)&&(t+="0");for(var e=t.split(":"),n=e.length,r=[],i=0;i<e.length;i++){var a=e[i];if(""===a)for(;n++<=8;)r.push(0);else{if(!/^[a-f0-9]{1,4}$/i.test(a))return;r.push(parseInt(a,16))}}return r}(t);if(e){var n="";return e.forEach(function(t){n+=("0000000000000000"+t.toString(2)).slice(-16)}),n}}return t.wireless&&((f=a.insertCell()).textContent="-",f.setAttribute("data-label",i.children[Object.keys(m).length+1].textContent),(d=a.insertCell()).textContent="-",d.setAttribute("data-label",i.children[Object.keys(m).length+2].textContent),(g=a.insertCell()).textContent="-",g.setAttribute("data-label",i.children[Object.keys(m).length+3].textContent),v=h(n),t.signalgraph.addSignal(v)),a.onmouseenter=function(){a.classList.add("highlight"),v&&(v.highlight=!0)},a.onmouseleave=function(){a.classList.remove("highlight"),v&&(v.highlight=!1)},y(),{get_hostname:function(){return u.textContent},get_addr:function(){return e},update_nodeinfo:function(t){if(e=function(t){var e=w(l);if(t&&t[0]){t=t.map(function(t){var n=w(t);if(!n)return[-1];var r=0;return e&&(r=function(t,e){var n;for(n=0;n<t.length&&n<e.length&&t[n]===e[n];n++);return n}(e,n)),[r,n,t]}),t.sort(function(t,e){return t[0]<e[0]?1:t[0]>e[0]||t[1]<e[1]?-1:t[1]>e[1]?1:0});var n=t[0][2];return n&&!/^fe80:/i.test(n)?n:void 0}}(t.network.addresses),e){if("span"===u.nodeName.toLowerCase()){var n=u;u=document.createElement("a"),n.parentNode.replaceChild(u,n)}u.href="http://["+e+"]/"}if(u.textContent=t.hostname,d&&s&&t.location){var r=(i=s.latitude,a=s.longitude,o=t.location.latitude,c=t.location.longitude,f=Math.PI/180,h=(o*=f)-(i*=f),g=(c*=f)-(a*=f),v=Math.sin(h/2)*Math.sin(h/2)+Math.sin(g/2)*Math.sin(g/2)*Math.cos(i)*Math.cos(o),2*Math.asin(Math.sqrt(v))*6372.8);d.textContent=Math.round(1e3*r)+" m"}var i,a,o,c,f,h,g,v;y()},update_mesh:function(t){Object.keys(m).forEach(function(e){var n=m[e];n.td.textContent=t[e]+n.suffix}),y()},update_wifi:function(t){f.textContent=t.signal,g.textContent=Math.round(t.inactive/1e3)+" s",a.classList.toggle("inactive",t.inactive>200),v.set(t.inactive>200?null:t.signal),y()}}}function p(t,e,n){var r,i={};n&&(r=g(),t.appendChild(r.el));var a={table:t.firstElementChild,signalgraph:r,ifname:e,wireless:n},o=!1,c={},s=[];function l(){if(!o){o=!0;var t=new EventSource("/cgi-bin/dyn/neighbours-nodeinfo?"+encodeURIComponent(e));t.addEventListener("neighbour",function(t){try{var e=JSON.parse(t.data);(n=e,r=[],a=n.network.mesh,Object.keys(a).forEach(function(t){var e=a[t].interfaces;Object.keys(e).forEach(function(t){e[t].forEach(function(t){r.push(t)})})}),r).forEach(function(t){var n=i[t];if(n){delete c[t];try{n.update_nodeinfo(e)}catch(t){console.error(t)}}})}catch(t){console.error(t)}var n,r,a},!1),t.onerror=function(){t.close(),o=!1,Object.keys(c).forEach(function(t){c[t]>0&&(c[t]--,l())})}}}function f(t){var e=i[t];return e||(c[t]=3,e=i[t]=v(a,t,(s[0]||(s=["#396AB1","#DA7C30","#3E9651","#CC2529","#535154","#6B4C9A","#922428","#948B3D"]),s.shift()),function(){delete c[t],delete i[t]}),l()),e}return n&&u("/cgi-bin/dyn/stations?"+encodeURIComponent(e),function(t){Object.keys(t).forEach(function(e){var n=t[e];f(e).update_wifi(n)})}),{get_neigh:f,lookup_neigh:function(t){return i[t]}}}document.querySelectorAll("[data-interface]").forEach(function(t){var e=t.getAttribute("data-interface"),n=(t.getAttribute("data-interface-address"),!!t.getAttribute("data-interface-wireless"));d[e]=p(t,e,n)});var m=document.body.getAttribute("data-mesh-provider");m&&u(m,function(t){Object.keys(t).forEach(function(e){var n=t[e],r=d[n.ifname];r&&r.get_neigh(e).update_mesh(n)})})}();
++"use strict";!function(){var t=JSON.parse(document.body.getAttribute("data-translations"));function e(e,n){return e.toFixed(n).replace(/\./,t["."])}function n(t,n){n--;for(var r=t;r>=10&&n>0;r/=10)n--;return e(t,n)}function r(t){return function(t,e,r){var i=0;if(void 0===r)return"- ";for(;r>e&&i<t.length-1;)r/=e,i++;return(r=n(r,3))+" "+t[i]}(["","K","M","G","T"],1024,t)}String.prototype.sprintf=function(){var t=0,e=arguments;return this.replace(/%s/g,function(){return e[t++]})};var i,a,o={id:function(t){return t},nfLink:function(t){if(!t||"object"!=typeof t)return"-";if(!t.carrier)return"–";if(!(t.speed>0))return"up";var e=t.speed+("full"===t.duplex?" FDX":"half"===t.duplex?" HDX":"TX");return t.possible>t.speed&&(e+=" ("+t.possible+" possible)"),e},nfOffline:function(t){return 1==t?"offline":0==t?"online":"–"},nfTemp:function(t){return"number"==typeof t?Math.round(t)+" °C":"–"},nfSsid:function(t){return t||"–"},gateway:(i={},a={},function(t){if(!t)return"";if(!(i[t]||a[t]>Date.now())){a[t]=Date.now()+3e5;var e=new XMLHttpRequest;e.onload=function(){var n=200===e.status?e.responseText.trim():"";n&&(i[t]=n)},e.open("GET","/cgi-bin/dyn/gateway-name?"+encodeURIComponent(t)),e.send()}if(!i[t])return t;var n=document.createElement("span");return n.title=t,n.textContent=i[t],n}),decimal:function(t){return e(t,2)},percent:function(e){return t["%s used"].sprintf(n(100*e,3)+"%")},memory:function(t){var e=1-t.available/t.total;return o.percent(e)},time:function(e){var n=Math.round(e/60),r=Math.floor(n/1440),i=Math.floor(n%1440/60);n=Math.floor(n%60);var a="";return 1===r?a+=t["1 day"]+", ":r>1&&(a+=t["%s days"].sprintf(r)+", "),a+=i+":",n<10&&(a+="0"),a+=n},packetsDiff:function(n,r,i){if(i>0)return a=(n-r)/i,t["%s packets/s"].sprintf(e(a,0));var a},bytesDiff:function(t,e,n){if(n>0)return r(8*((t-e)/n))+"bps"},bytes:function(t){return r(t)+"B"},neighbour:function(t){if(!t)return"";for(var e in d){var n=d[e].lookup_neigh(t);if(n){var r=document.createElement("span");r.appendChild(document.createTextNode("via "));var i=document.createElement("a");return i.href="http://["+n.get_addr()+"]/",i.textContent=n.get_hostname(),r.appendChild(i),r.appendChild(document.createTextNode(" ("+e+")")),r}}return"via "+t+" (unknown iface)"}};function c(t,e){return e.split("/").forEach(function(e){t&&(t=t[e])}),t}function u(t,e){var n=new EventSource(t),r={};n.onmessage=function(t){var n=JSON.parse(t.data);e(n,r),r=n},n.onerror=function(){n.close(),window.setTimeout(function(){u(t,e)},3e3)}}var s,l=document.body.getAttribute("data-node-address");try{s=JSON.parse(document.body.getAttribute("data-node-location"))}catch(t){}var f=document.querySelectorAll("[data-statistics]");u("/cgi-bin/dyn/statistics",function(e,n){var r=e.uptime-n.uptime;f.forEach(function(t){var i=t.getAttribute("data-statistics"),a=t.getAttribute("data-format"),u=c(n,i),s=c(e,i);try{var l=o[a](s,u,r);if("object"==typeof l)t.lastChild&&t.removeChild(t.lastChild),t.appendChild(l);else t.textContent=l}catch(t){console.error(t)}});try{!function(e){var n=document.getElementById("mesh-vpn");if(e){n.style.display="";for(var r=document.getElementById("mesh-vpn-peers");r.lastChild;)r.removeChild(r.lastChild);var i=function t(e,n){return Object.keys(n.peers||{}).forEach(function(t){e.push([t,n.peers[t]])}),Object.keys(n.groups||{}).forEach(function(r){t(e,n.groups[r])}),e}([],e);i.sort(),i.forEach(function(e){var n=document.createElement("tr"),i=document.createElement("th");i.textContent=e[0],n.appendChild(i);var a=document.createElement("td");e[1]?a.textContent=t.connected+" ("+o.time(e[1].established)+")":a.textContent=t["not connected"],n.appendChild(a),r.appendChild(n)})}else n.style.display="none"}(e.mesh_vpn)}catch(t){console.error(t)}});var d={};function h(t){var e=document.createElement("canvas"),n=e.getContext("2d"),r=null;return{canvas:e,highlight:!1,resize:function(t,r){var i;try{i=n.getImageData(0,0,t,r)}catch(t){}e.width=t,e.height=r,i&&n.putImageData(i,0,0)},draw:function(i,a){var o=a(r);n.clearRect(i,0,5,e.height),o&&function(e,r){n.beginPath(),n.fillStyle=t,n.arc(e,r,1.2,0,2*Math.PI,!1),n.closePath(),n.fill()}(i,o)},set:function(t){r=t}}}function g(){var t=0,e=[],n=document.createElement("canvas");n.className="signalgraph",n.height=200;var r=n.getContext("2d");function i(t,e,n,r){return(e*t+n*(r-t))/r}function a(){n.width=n.clientWidth,e.forEach(function(t){t.resize(n.width,n.height)})}function o(){if(0!==n.clientWidth){n.width!==n.clientWidth&&a(),r.clearRect(0,0,n.width,n.height);var o=!1;e.forEach(function(t){t.highlight&&(o=!0)}),r.save(),e.forEach(function(e){o&&(r.globalAlpha=.2),e.highlight&&(r.globalAlpha=1),e.draw(t,function(t){return function(t,e,n,r){return(1-(t-e)/(n-e))*r}(t,-100,0,n.height)}),r.drawImage(e.canvas,0,0)}),r.restore(),r.save(),r.beginPath(),r.strokeStyle="rgba(255, 180, 0, 0.15)",r.lineWidth=5,r.moveTo(t+2.5,0),r.lineTo(t+2.5,n.height),r.stroke(),function(){var t=Math.floor(n.height/40);r.save(),r.lineWidth=.5,r.strokeStyle="rgba(0, 0, 0, 0.25)",r.fillStyle="rgba(0, 0, 0, 0.5)",r.textAlign="end",r.textBaseline="bottom",r.beginPath();for(var e=0;e<t;e++){var a=n.height-40*e;r.moveTo(0,a-.5),r.lineTo(n.width,a-.5);var o=Math.round(i(a,-100,0,n.height))+" dBm";r.save(),r.strokeStyle="rgba(255, 255, 255, 0.9)",r.lineWidth=4,r.miterLimit=2,r.strokeText(o,n.width-5,a-2.5),r.fillText(o,n.width-5,a-2.5),r.restore()}r.stroke(),r.strokeStyle="rgba(0, 0, 0, 0.83)",r.lineWidth=1.5,r.strokeRect(.5,.5,n.width-1,n.height-1),r.restore()}()}}a(),window.addEventListener("resize",o);var c=0;return window.requestAnimationFrame(function e(r){r-c>40&&(o(),t=(t+1)%n.width,c=r),window.requestAnimationFrame(e)}),{el:n,addSignal:function(t){e.push(t),t.resize(n.width,n.height)},removeSignal:function(t){e.splice(e.indexOf(t),1)}}}function v(t,e,n,r){var i=t.table.firstElementChild,a=t.table.insertRow(),o=a.insertCell();if(o.setAttribute("data-label",i.children[0].textContent),t.wireless){var c=document.createElement("span");c.textContent="⬤ ",c.style.color=n,o.appendChild(c)}var u=document.createElement("span");u.textContent=e,o.appendChild(u);var f,d,g,v,p,m={};function b(t){var e=t.getAttribute("data-key");if(e){var n=t.getAttribute("data-suffix")||"",r=a.insertCell();r.textContent="-",r.setAttribute("data-label",t.textContent),m[e]={td:r,suffix:n}}}for(var C=0;C<i.children.length;C++)b(i.children[C]);function y(){p&&window.clearTimeout(p),p=window.setTimeout(function(){v&&t.signalgraph.removeSignal(v),a.parentNode.removeChild(a),r()},6e4)}function w(t){var e=function(t){"::"==t.slice(0,2)&&(t="0"+t),"::"==t.slice(-2)&&(t+="0");for(var e=t.split(":"),n=e.length,r=[],i=0;i<e.length;i++){var a=e[i];if(""===a)for(;n++<=8;)r.push(0);else{if(!/^[a-f0-9]{1,4}$/i.test(a))return;r.push(parseInt(a,16))}}return r}(t);if(e){var n="";return e.forEach(function(t){n+=("0000000000000000"+t.toString(2)).slice(-16)}),n}}return t.wireless&&((f=a.insertCell()).textContent="-",f.setAttribute("data-label",i.children[Object.keys(m).length+1].textContent),(d=a.insertCell()).textContent="-",d.setAttribute("data-label",i.children[Object.keys(m).length+2].textContent),(g=a.insertCell()).textContent="-",g.setAttribute("data-label",i.children[Object.keys(m).length+3].textContent),v=h(n),t.signalgraph.addSignal(v)),a.onmouseenter=function(){a.classList.add("highlight"),v&&(v.highlight=!0)},a.onmouseleave=function(){a.classList.remove("highlight"),v&&(v.highlight=!1)},y(),{get_hostname:function(){return u.textContent},get_addr:function(){return e},update_nodeinfo:function(t){if(e=function(t){var e=w(l);if(t&&t[0]){t=t.map(function(t){var n=w(t);if(!n)return[-1];var r=0;return e&&(r=function(t,e){var n;for(n=0;n<t.length&&n<e.length&&t[n]===e[n];n++);return n}(e,n)),[r,n,t]}),t.sort(function(t,e){return t[0]<e[0]?1:t[0]>e[0]||t[1]<e[1]?-1:t[1]>e[1]?1:0});var n=t[0][2];return n&&!/^fe80:/i.test(n)?n:void 0}}(t.network.addresses),e){if("span"===u.nodeName.toLowerCase()){var n=u;u=document.createElement("a"),n.parentNode.replaceChild(u,n)}u.href="http://["+e+"]/"}if(u.textContent=t.hostname,d&&s&&t.location){var r=(i=s.latitude,a=s.longitude,o=t.location.latitude,c=t.location.longitude,f=Math.PI/180,h=(o*=f)-(i*=f),g=(c*=f)-(a*=f),v=Math.sin(h/2)*Math.sin(h/2)+Math.sin(g/2)*Math.sin(g/2)*Math.cos(i)*Math.cos(o),2*Math.asin(Math.sqrt(v))*6372.8);d.textContent=Math.round(1e3*r)+" m"}var i,a,o,c,f,h,g,v;y()},update_mesh:function(t){Object.keys(m).forEach(function(e){var n=m[e];n.td.textContent=t[e]+n.suffix}),y()},update_wifi:function(t){f.textContent=t.signal,g.textContent=Math.round(t.inactive/1e3)+" s",a.classList.toggle("inactive",t.inactive>200),v.set(t.inactive>200?null:t.signal),y()}}}function p(t,e,n){var r,i={};n&&(r=g(),t.appendChild(r.el));var a={table:t.firstElementChild,signalgraph:r,ifname:e,wireless:n},o=!1,c={},s=[];function l(){if(!o){o=!0;var t=new EventSource("/cgi-bin/dyn/neighbours-nodeinfo?"+encodeURIComponent(e));t.addEventListener("neighbour",function(t){try{var e=JSON.parse(t.data);(n=e,r=[],a=n.network.mesh,Object.keys(a).forEach(function(t){var e=a[t].interfaces;Object.keys(e).forEach(function(t){e[t].forEach(function(t){r.push(t)})})}),r).forEach(function(t){var n=i[t];if(n){delete c[t];try{n.update_nodeinfo(e)}catch(t){console.error(t)}}})}catch(t){console.error(t)}var n,r,a},!1),t.onerror=function(){t.close(),o=!1,Object.keys(c).forEach(function(t){c[t]>0&&(c[t]--,l())})}}}function f(t){var e=i[t];return e||(c[t]=3,e=i[t]=v(a,t,(s[0]||(s=["#396AB1","#DA7C30","#3E9651","#CC2529","#535154","#6B4C9A","#922428","#948B3D"]),s.shift()),function(){delete c[t],delete i[t]}),l()),e}return n&&u("/cgi-bin/dyn/stations?"+encodeURIComponent(e),function(t){Object.keys(t).forEach(function(e){var n=t[e];f(e).update_wifi(n)})}),{get_neigh:f,lookup_neigh:function(t){return i[t]}}}document.querySelectorAll("[data-interface]").forEach(function(t){var e=t.getAttribute("data-interface"),n=(t.getAttribute("data-interface-address"),!!t.getAttribute("data-interface-wireless"));d[e]=p(t,e,n)});var m=document.body.getAttribute("data-mesh-provider");m&&u(m,function(t){Object.keys(t).forEach(function(e){var n=t[e],r=d[n.ifname];r&&r.get_neigh(e).update_mesh(n)})})}();
 \ No newline at end of file
