@@ -28,14 +28,19 @@ melden sie das und machen weiter.
 
 ## Patches
 
-### mesh-vpn/tunneldigger-watchdog-no-wan
+### mesh-vpn/tunneldigger-watchdog-shell
 
-Port von FirmwareConfigs v2023.2.x `e362e4d`. Der Watchdog
-(`/usr/bin/tunneldigger-watchdog`, alle 5 min) startet tunneldigger nicht
-mehr neu, solange br-wan keine IPv4-Adresse hat: Der Client spricht nur IPv4,
-ein Neustart setzt nur dieselbe vergebliche Broker-Suche neu auf (Knoten mit
-VPN an, aber ohne WAN, z. B. nur LAN-Mesh). Mit Adresse bleibt alles wie
-bisher; die PID-Prüfung (toter oder doppelter Prozess) greift weiter.
+Port von gluon-patches-fixes `lowmem/tunneldigger-watchdog-shell` (v2023.2.x,
+v2025.1.x, mit FirmwareConfigs `e362e4d`). Der Watchdog
+(`/usr/bin/tunneldigger-watchdog`, alle 5 min) läuft als Shell statt Lua:
+Auf 4/32-Geräten kam die Lua-Laufzeit samt simple-uci jedes Mal vom Flash
+(am Testknoten 0,11 s in Shell). Gleiche Entscheidungen wie die Lua-Fassung
+von 2021.1 einschließlich ihrer PID-Prüfung. Neu: Solange br-wan keine
+IPv4-Adresse hat, startet er tunneldigger nicht neu; der Client spricht nur
+IPv4, ein Neustart setzt nur dieselbe vergebliche Broker-Suche neu auf
+(Knoten mit VPN an, aber ohne WAN). Das Skript wandert von `luasrc/` nach
+`files/`, weil luasrcdiet Shell zerstören würde; der Patch ist im git-Format,
+damit es ausführbar (100755) ankommt.
 
 Gegenstück im Client selbst (Reinit-Pause, kein modprobe-Sturm, `f9a3053`)
 ist ein Patch am Paketfeed-Modul und liegt in `gluon-patches-fixes`.

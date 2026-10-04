@@ -28,7 +28,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRE_UPDATE=()
 
 POST_UPDATE=(
-  mesh-vpn/tunneldigger-watchdog-no-wan.sh      # tunneldigger-watchdog: ohne WAN-IPv4 kein Neustart
+  mesh-vpn/tunneldigger-watchdog-shell.sh       # tunneldigger-watchdog: Shell statt Lua, ohne WAN-IPv4 kein Neustart
 )
 
 PHASE="${1:-}"
