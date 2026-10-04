@@ -26,6 +26,8 @@ Zusaetzlich zu Gluon:
   Kabel-Nachbar mit Koordinaten warf einen TypeError, danach lief die
   Nachbaraktualisierung nicht mehr.
 - CSS und JS mit ?v=<Release>, damit der Browser nach dem Update neu laedt.
+- <meta name="robots" content="noindex,nofollow" /> wie Gluon 63e016df
+  (upstream ab 2022.1): Crawler-Last auf 4/32-Geraeten.
 
 Die ausgelieferte status-page.js ist mit terser 5 (-c -m) aus
 javascript/status-page.js erzeugt (Gluon nimmt uglifyjs; das Ergebnis ist
@@ -151,7 +153,11 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  
  	local function sorted(t)
  		t = {unpack(t)}
-@@ -128,7 +214,7 @@
+@@ -125,10 +211,11 @@
+ 	<head>
+ 		<meta charset="utf-8" />
+ 		<meta name="viewport" content="width=device-width, user-scalable=no" />
++		<meta name="robots" content="noindex,nofollow" />
  
  		<title><%| nodeinfo.hostname %> - <%:Status%></title>
  
@@ -160,7 +166,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  	</head>
  	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>"<%=
  		attr('data-translations', translations) ..
-@@ -152,9 +238,23 @@
+@@ -152,9 +239,23 @@
  							<%| nodeinfo.location.latitude %>, <%| nodeinfo.location.longitude %>
  						</a></dd>
  					<%- end %>
@@ -185,7 +191,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  					<dt><%:Firmware%></dt><dd><%| nodeinfo.software.firmware.release %></dd>
  					<% if nodeinfo.network.mesh_vpn then -%>
  						<dt><%:Mesh VPN%></dt>
-@@ -163,6 +263,9 @@
+@@ -163,6 +264,9 @@
  							<% if nodeinfo.network.mesh_vpn.provider then -%>
  							<br /><%| nodeinfo.network.mesh_vpn.provider %>
  							<%- end %>
@@ -195,7 +201,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  						</dd>
  						<% if nodeinfo.network.mesh_vpn.bandwidth_limit.enabled then -%>
  						<dt><%:Bandwidth limit%></dt>
-@@ -176,6 +279,9 @@
+@@ -176,6 +280,9 @@
  						</dd>
  						<%- end %>
  					<%- end %>
@@ -205,7 +211,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  					<dt><%:Site%></dt><dd><%| site.site_name() %></dd>
  					<% if nodeinfo.system.domain_code then -%>
  						<dt><%:Domain%></dt>
-@@ -211,9 +317,12 @@
+@@ -211,9 +318,12 @@
  				<table>
  					<tr><th><%:Uptime%></th><td><%= statistics('uptime', 'time') %></td></tr>
  					<tr><th><%:Load average%></th><td><%= statistics('loadavg', 'decimal') %></td></tr>
@@ -219,7 +225,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  				</table>
  
  				<h3><%:Clients%></h3>
-@@ -226,9 +335,41 @@
+@@ -226,9 +336,41 @@
  					<h3><%:Radios%></h3>
  					<table>
  						<% for _, radio in ipairs(radios) do -%>
@@ -262,7 +268,7 @@ diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-p
  							</tr>
  						<%- end %>
  					</table>
-@@ -278,6 +419,6 @@
+@@ -278,6 +420,6 @@
  				%>
  			</div>
  		</div>
