@@ -62,6 +62,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-hostnames.sh` | `gluon.setup` und `setup.gluon` per DNS auf 192.168.1.1 | |
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
+| `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
 
 Alle Skripte laufen post-update. `setup-mode-hostnames` und
 `setup-mode-captive` brauchen kein Paket; sie gehören hierher, weil
@@ -84,7 +85,10 @@ Alle Skripte laufen post-update. `setup-mode-hostnames` und
   `setup-mode-hostnames` auf, `setup-mode-wifi` auf beiden.
   `setup-mode-wifi` ist nur mit dem Paket `neanderfunk-setup-wifi` sinnvoll;
   ohne das Paket ändert es nichts.
-* Zwischen den beiden Gruppen gibt es keine Abhängigkeit, und keine der
+* **`hostname/`**: ein einzelner Patch an `gluon/util.lua`, hängt an keinem
+  anderen; ohne das Paket `neanderfunk-default-hostname` ändert er nichts.
+  Nur Gluon 2025.1, kein Backport (adorfer 05.10.2026).
+* Zwischen den Gruppen gibt es keine Abhängigkeit, und keine der
   Dateien wird von den anderen Neanderfunk-Patch-Repos
   ([gluon-patches-hardware](https://github.com/Neanderfunk/gluon-patches-hardware),
   [gluon-patches-fixes](https://github.com/Neanderfunk/gluon-patches-fixes))

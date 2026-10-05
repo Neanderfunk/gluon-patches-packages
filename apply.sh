@@ -47,6 +47,7 @@ POST_UPDATE=(
   setup-mode-network/setup-mode-hostnames.sh    # Setup-Mode: gluon.setup und setup.gluon per DNS
   setup-mode-network/setup-mode-captive.sh      # Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite
   setup-mode-network/setup-mode-wifi.sh         # Setup-Mode: dnsmasq an br-setup (fuer neanderfunk-setup-wifi)
+  hostname/default-hostname.sh                  # Gluon-Core: Vorgabe-Hostname <Praefix><Modell>-<4 Stellen> (neanderfunk-default-hostname)
 )
 
 PHASE="${1:-}"

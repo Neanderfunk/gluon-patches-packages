@@ -1,0 +1,28 @@
+Gluon-Core: Vorgabe-Hostname aus neanderfunk-default-hostname
+
+gluon.util.default_hostname() fragt zuerst das Lua-Modul
+neanderfunk.default_hostname (Paket neanderfunk-default-hostname im Feed):
+<hostname_prefix><Modell-Kurzname>-<letzte 4 der node_id>, etwa
+"dias-WDR3600-1b8c" statt "dias-6466b3ce1b8c". Fehlt das Paket oder kennt
+es das Image nicht, bleibt es bei Gluons Form. Wirkt beim ersten Start
+(upgrade/030-system) und im Wizard (0100-hostname); bestehende Knoten
+behalten ihren Namen. Nur Gluon 2025.1 (adorfer 05.10.2026: kein Backport).
+
+diff --git a/package/gluon-core/luasrc/usr/lib/lua/gluon/util.lua b/package/gluon-core/luasrc/usr/lib/lua/gluon/util.lua
+--- a/package/gluon-core/luasrc/usr/lib/lua/gluon/util.lua
++++ b/package/gluon-core/luasrc/usr/lib/lua/gluon/util.lua
+@@ -108,6 +108,14 @@
+ end
+ 
+ function M.default_hostname()
++	-- neanderfunk-default-hostname: <Praefix><Modell-Kurzname>-<letzte 4 der node_id>
++	local ok, nf = pcall(require, 'neanderfunk.default_hostname')
++	if ok then
++		local name = nf.hostname(site.hostname_prefix(''), M.node_id())
++		if name then
++			return name
++		end
++	end
+ 	return site.hostname_prefix('') .. M.node_id()
+ end
+ 
