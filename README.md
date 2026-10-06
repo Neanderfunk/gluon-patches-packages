@@ -59,6 +59,13 @@ steht die Gateway-MAC da. Einzelheiten im Kopf des Patches.
 
 Unverändert aus v2025.1.x, passt auf 2021.1 ohne Anpassung.
 
+### status-page/statuspage-stations-300ms
+
+Der Provider fuer den Signalgraphen der Mesh-Nachbarn (`providers/stations`)
+fragt die Stationsliste alle 300 statt 150 ms ab. Am 841v9 kostete er mit
+offener Statusseite ~11 % CPU samt Kernel-Arbeit, die Load stieg von 0,09 auf
+0,17-0,21 (Entscheidung adorfer 06.10.2026). Haengt an keinem anderen Patch.
+
 ### setup-mode-network/
 
 `setup-mode-hostnames`, `setup-mode-captive`, `setup-mode-wifi` unverändert

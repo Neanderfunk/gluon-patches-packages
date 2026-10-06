@@ -1,0 +1,21 @@
+Gluon-Statuspage (2021.1, Sackgasse): Stationsabfrage fuer den Signalgraphen alle 300 statt 150 ms
+
+Entscheidung adorfer 06.10.2026. Gemessen am 841v9 (24100425bro) mit offener
+Statusseite: Load 0,09 -> 0,17-0,21, davon ~11 % CPU in providers/stations
+(nl80211-Stationsliste alle 150 ms) samt Kernel-Arbeit (kworker). statistics
+(3 s) und neighbours-batadv (10 s) kosten kaum etwas und bleiben. Der
+Signalgraph laeuft halb so schnell; Nachbarn verwirft die Seite erst nach
+60 s ohne Aktualisierung.
+
+diff --git a/package/gluon-status-page/src/stations.c b/package/gluon-status-page/src/stations.c
+--- a/package/gluon-status-page/src/stations.c
++++ b/package/gluon-status-page/src/stations.c
+@@ -119,7 +119,7 @@
+     printf("data: %s\n\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
+     fflush(stdout);
+     json_object_put(obj);
+-    usleep(150000);
++    usleep(300000);
+   }
+ 
+   return 0;
