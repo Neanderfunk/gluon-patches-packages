@@ -32,6 +32,7 @@ POST_UPDATE=(
   status-page/statuspage-neanderfunk.sh         # Statusseite: Neanderfunk-Anbauten, SSID live, Gateway-Name
   status-page/statuspage-darkmode.sh            # Statusseite: Darkmode nach prefers-color-scheme
   status-page/statuspage-stations-300ms.sh      # Statusseite: Signalgraph-Abfrage alle 300 statt 150 ms (Last auf 4/32)
+  status-page/statuspage-clientbands.sh        # Statusseite: Clients je Band nur fuer vorhandene Baender
   setup-mode-network/setup-mode-hostnames.sh    # Setup-Mode: gluon.setup und setup.gluon per DNS
   setup-mode-network/setup-mode-captive.sh      # Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite
   setup-mode-network/setup-mode-wifi.sh         # Setup-Mode: dnsmasq an br-setup (fuer neanderfunk-setup-wifi)

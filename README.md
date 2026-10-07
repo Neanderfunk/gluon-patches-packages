@@ -66,6 +66,13 @@ fragt die Stationsliste alle 300 statt 150 ms ab. Am 841v9 kostete er mit
 offener Statusseite ~11 % CPU samt Kernel-Arbeit, die Load stieg von 0,09 auf
 0,17-0,21 (Entscheidung adorfer 06.10.2026). Haengt an keinem anderen Patch.
 
+### status-page/statuspage-clientbands
+
+"Wireless 2.4 GHz" und "Wireless 5 GHz" unter Clients nur, wenn das Geraet ein
+Radio in diesem Band hat (uci `wifi-device`, unter 19.07 `hwmode`). Gluon zeigt
+beide immer, auf einem 841 also dauerhaft "5 GHz: 0". Gemeldet von adorfer
+07.10.2026; Gegenstueck in v2025.1.x mit `band`.
+
 ### setup-mode-network/
 
 `setup-mode-hostnames`, `setup-mode-captive`, `setup-mode-wifi` unverändert
