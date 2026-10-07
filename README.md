@@ -130,3 +130,10 @@ Ethernet-Link kurz wie auf Switch-Aufklebern (Wunsch adorfer 04.10.2026):
 "1000 FDX" / "100 HDX" mit bekannter Duplex-Angabe (DSA, eigene Karten),
 sonst "1000TX". Lua-Format und JS-Formatierer nfLink (auch min.js).
 
+### status-page/statuspage-clientbands
+
+"Wireless 2.4 GHz" und "Wireless 5 GHz" unter Clients nur, wenn das Geraet ein
+Radio in diesem Band hat (uci `wifi-device`, `band` 2g/5g). Gluon zeigt beide
+immer, auf einem 841 also dauerhaft "5 GHz: 0", auf CPE510/NanoStation M5
+"2.4 GHz: 0", auf ERX und x86 beide. Gemeldet von adorfer 07.10.2026.
+

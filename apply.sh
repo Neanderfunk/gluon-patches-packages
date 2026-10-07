@@ -44,6 +44,7 @@ POST_UPDATE=(
   status-page/statuspage-distance-wired.sh     # Statusseite: Entfernung nur bei WLAN-Nachbarn (Gluon-Fehler)
   status-page/statuspage-portroles.sh          # Statusseite: Rolle je Ethernet-Port bzw. LAN-/WAN-Gruppe
   status-page/statuspage-linkformat.sh         # Statusseite: Ethernet-Link als 1000 FDX / 100 HDX
+  status-page/statuspage-clientbands.sh        # Statusseite: Clients je Band nur fuer vorhandene Baender
   setup-mode-network/setup-mode-hostnames.sh    # Setup-Mode: gluon.setup und setup.gluon per DNS
   setup-mode-network/setup-mode-captive.sh      # Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite
   setup-mode-network/setup-mode-wifi.sh         # Setup-Mode: dnsmasq an br-setup (fuer neanderfunk-setup-wifi)

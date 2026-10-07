@@ -1,0 +1,45 @@
+Statusseite: Clients je Band nur fuer vorhandene Baender
+
+Gluon zeigt "Wireless 2.4 GHz" und "Wireless 5 GHz" immer, auch auf Geraeten
+ohne das Band (841 ohne 5 GHz, CPE510/NanoStation M5 ohne 2.4 GHz, ERX ohne
+WLAN) - dort steht dauerhaft 0. Die Zeile erscheint jetzt nur, wenn es ein
+wifi-device mit diesem Band gibt (uci wireless, band 2g/5g wie
+gluon.wireless.foreach_radio). Gemeldet von adorfer 07.10.2026.
+
+Setzt auf dem Zustand nach statuspage-linkformat auf.
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 168291d..3e00d4d 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -212,6 +212,17 @@
+ 	ubus.close(uconn)
+ 
+ 	local radios = get_radios()
++
++	-- Clients je Band nur fuer Baender, die das Geraet hat: ein 841 hat kein
++	-- 5 GHz, eine CPE510 oder NanoStation M5 kein 2.4 GHz, ein ERX gar kein
++	-- WLAN. Massgeblich ist die Hardware (wifi-device in uci), nicht ob das
++	-- Radio gerade an ist; dieselbe Band-Zuordnung wie wireless.foreach_radio().
++	local has_band = {}
++	uci:foreach('wireless', 'wifi-device', function(radio)
++		if radio.band then
++			has_band[radio.band] = true
++		end
++	end)
+ 	local stats = get_statistics()
+ 	local nf_stats = type(stats.neanderfunk) == 'table' and stats.neanderfunk or {}
+ 	local nf_hw = type(nodeinfo.neanderfunk) == 'table' and type(nodeinfo.neanderfunk.hardware) == 'table'
+@@ -506,8 +517,12 @@
+ 				<table>
+ 					<tbody>
+ 						<tr><th><%:Total%></th><td><%= statistics('clients/total') %></td></tr>
++						<% if has_band['2g'] then -%>
+ 						<tr><th><%:Wireless 2.4 GHz%></th><td><%= statistics('clients/wifi24') %></td></tr>
++						<% end -%>
++						<% if has_band['5g'] then -%>
+ 						<tr><th><%:Wireless 5 GHz%></th><td><%= statistics('clients/wifi5') %></td></tr>
++						<% end -%>
+ 					</tbody>
+ 				</table>
+ 				<% if radios[1] then -%>
