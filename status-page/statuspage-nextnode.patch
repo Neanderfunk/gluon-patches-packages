@@ -1,8 +1,8 @@
 Statusseite: Next-Node-Adressen mit Link
 
 Unter "IP address" eine Zeile "Next node" mit IPv4 und IPv6 des Next-Node
-(site.next_node.ip4/ip6, auch domainspezifisch, ueber gluon.site) als Links,
-darunter ein HTTP-Link auf den ersten Namen aus site.next_node.name (bei uns
+(site.next_node.ip4/ip6, auch domainspezifisch, ueber gluon.site) als Links
+in einer Zeile, durch ein Leerzeichen getrennt, darunter ein HTTP-Link auf den ersten Namen aus site.next_node.name (bei uns
 http://nextnode/). Unter diesen Adressen ist der Webserver jedes Knotens
 ebenfalls erreichbar. Fehlen ip4 und ip6, entfaellt die Zeile. Wunsch adorfer
 12.10.2026. Text aus dem Katalog neanderfunk-status-page ("Next node").
@@ -10,10 +10,10 @@ ebenfalls erreichbar. Fehlen ip4 und ip6, entfaellt die Zeile. Wunsch adorfer
 Setzt auf dem Zustand nach statuspage-clientbands auf.
 
 diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
-index 3e00d4d..a1f0da8 100644
+index 3e00d4d..4460665 100644
 --- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
 +++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
-@@ -435,6 +435,17 @@
+@@ -435,6 +435,16 @@
  						<dt><%| nf.translate('Mesh MAC address') %></dt><dd><%| mesh_if.other[1] %></dd>
  					<%- end %>
  					<dt><%:IP address%></dt><dd><%= pcdata(table.concat(sorted(nodeinfo.network.addresses), '\n')):gsub('\n', '<br>') %></dd>
@@ -22,7 +22,6 @@ index 3e00d4d..a1f0da8 100644
 +						<dt><%| nf.translate('Next node') %></dt>
 +						<dd>
 +							<% if nn_ip4 then -%><a href="http://<%| nn_ip4 %>/"><%| nn_ip4 %></a><%- end %>
-+							<% if nn_ip4 and nn_ip6 then %><br><% end %>
 +							<% if nn_ip6 then -%><a href="http://[<%| nn_ip6 %>]/"><%| nn_ip6 %></a><%- end %>
 +							<% local nn_name = site.next_node.name({})[1] -%>
 +							<% if nn_name then -%><br><a href="http://<%| nn_name %>/">http://<%| nn_name %>/</a><%- end %>

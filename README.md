@@ -140,7 +140,8 @@ immer, auf einem 841 also dauerhaft "5 GHz: 0", auf CPE510/NanoStation M5
 ### status-page/statuspage-nextnode
 
 Unter "IP address" die Zeile "Next node": IPv4 und IPv6 des Next-Node aus
-`site.next_node` (domainspezifisch ueber `gluon.site`) als Links, darunter
+`site.next_node` (domainspezifisch ueber `gluon.site`) als Links in einer
+Zeile (Leerzeichen dazwischen, adorfer 12.10.), darunter
 `http://<erster Name>/` (bei uns `http://nextnode/`). Unter diesen Adressen
 ist der Webserver jedes Knotens ebenfalls erreichbar. Fehlen beide Adressen,
 entfaellt die Zeile. Text aus `neanderfunk-status-page`. Wunsch adorfer
