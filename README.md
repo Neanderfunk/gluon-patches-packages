@@ -137,3 +137,11 @@ Radio in diesem Band hat (uci `wifi-device`, `band` 2g/5g). Gluon zeigt beide
 immer, auf einem 841 also dauerhaft "5 GHz: 0", auf CPE510/NanoStation M5
 "2.4 GHz: 0", auf ERX und x86 beide. Gemeldet von adorfer 07.10.2026.
 
+### status-page/statuspage-nextnode
+
+Unter "IP address" die Zeile "Next node": IPv4 und IPv6 des Next-Node aus
+`site.next_node` (domainspezifisch ueber `gluon.site`) als Links, darunter
+`http://<erster Name>/` (bei uns `http://nextnode/`). Unter diesen Adressen
+ist der Webserver jedes Knotens ebenfalls erreichbar. Fehlen beide Adressen,
+entfaellt die Zeile. Text aus `neanderfunk-status-page`. Wunsch adorfer
+12.10.2026; am WDR3600 1b8c (26100702bro) per Bind-Mount geprueft.
