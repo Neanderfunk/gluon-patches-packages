@@ -146,3 +146,13 @@ Zeile (Leerzeichen dazwischen, adorfer 12.10.), darunter
 ist der Webserver jedes Knotens ebenfalls erreichbar. Fehlen beide Adressen,
 entfaellt die Zeile. Text aus `neanderfunk-status-page`. Wunsch adorfer
 12.10.2026; am WDR3600 1b8c (26100702bro) per Bind-Mount geprueft.
+
+### status-page/statuspage-compact
+
+Senkrechte Abstände etwa halbiert (Leerzeile nach jedem Eintrag 16 -> 8 px,
+Überschriften, Tabellenzeilen, Spalten oben/unten, Kopfzeile), damit die
+linke Spalte auf einem 1080er-Monitor auch im Browserfenster ohne Scrollen
+passt (Wunsch adorfer 13.10.2026). SCSS und vorkompilierte CSS; setzt auf
+`statuspage-darkmode` auf. An der FB4040 Schulstr7 per Bind-Mount geprüft:
+bei 1920x950 endet die linke Spalte bei ~805 px.
+

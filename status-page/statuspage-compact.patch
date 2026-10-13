@@ -1,0 +1,130 @@
+Statusseite: senkrecht kompakter
+
+Wunsch adorfer 13.10.2026: Auf einem 1080er-Monitor soll die linke Spalte
+(Übersicht) auch im Browserfenster ohne Scrollen ganz zu sehen sein.
+Abstände in der Senkrechten etwa halbiert:
+
+  dd (Leerzeile nach jedem Eintrag)  16px -> 8px
+  dt (Titel zum Wert)                 4px -> 2px
+  h2 darunter                        16px -> 8px
+  h3 darüber/darunter              16/8px -> 8/4px
+  Tabellenzellen oben/unten           4px -> 2px
+  Spalten (.frame) oben/unten        16px -> 8px (seitlich bleibt 16px)
+  Kopfzeile h1 margin/padding      10/6px -> 5/3px
+  .container oben/unten           64/24px -> 44/12px
+  schmal (<1250px): Kopf und Abstand 56px -> 44px,
+                    Datentabellen-Zeilen 15px -> 8px
+
+Schriftgrößen bleiben. Geändert sind die SCSS-Quelle und die
+vorkompilierte status-page.css (von Hand, wie statuspage-darkmode).
+FB4040 Schulstr7 bei 1920x950: linke Spalte endet bei ~805 px statt
+unterhalb von 950 px.
+
+Setzt auf dem Zustand nach statuspage-darkmode auf (gleiche Zeile der CSS).
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/www/static/status-page.css b/package/gluon-status-page/files/lib/gluon/status-page/www/static/status-page.css
+index 2c11841..1eac81a 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/www/static/status-page.css
++++ b/package/gluon-status-page/files/lib/gluon/status-page/www/static/status-page.css
+@@ -1,2 +1,2 @@
+-html,body,div,span,h1,h2,h3,dl,dt,dd,canvas,header,table,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{background:rgba(0,0,0,0.12);font-family:Roboto, Lucida Grande, sans, Arial;color:rgba(0,0,0,0.87);font-size:14px;line-height:1}a{color:rgba(220,0,103,0.87);text-decoration:none;margin:0;padding:0;font-size:100%;vertical-align:baseline;background:transparent}a:hover{text-decoration:underline}h1{font-weight:bold}h2{font-size:16px;margin-bottom:16px;color:rgba(0,0,0,0.54)}h3{font-size:15px;margin-top:16px;margin-bottom:8px;color:rgba(0,0,0,0.54)}header{display:flex;padding:0 14px;background:#dc0067;color:rgba(255,255,255,0.98);position:absolute;top:0;width:100%;box-sizing:border-box;height:20vh;z-index:-1;box-shadow:0px 5px 6px rgba(0,0,0,0.16),0px 1.5px 3px rgba(0,0,0,0.23);white-space:nowrap}header h1{font-size:24px;margin:10px 0;padding:6px 0;text-overflow:ellipsis;overflow:hidden;flex:1}.container{display:flex;max-width:90vw;margin:64px auto 24px auto;background:#fdfdfd;box-shadow:0px 5px 20px rgba(0,0,0,0.19),0px 3px 6px rgba(0,0,0,0.23)}.container>.frame{flex:1;border-style:solid;border-color:rgba(0,0,0,0.12);box-sizing:border-box;padding:16px}.container>.frame+.frame{border-width:0 0 0 1px}.container>.frame-wide{flex:2}dt,th,td::before{font-weight:bold;color:rgba(0,0,0,0.87)}dt{margin-bottom:4px}th,td{text-align:left;padding:4px 16px 4px 0}th:last-child,td:last-child{padding-right:0}dd,td{font-weight:normal;font-size:0.9em;color:rgba(0,0,0,0.54)}dd{margin-bottom:16px}table{border-collapse:collapse;border-spacing:0}table.datatable{width:100%;table-layout:fixed}table.datatable th,table.datatable td{font-size:1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}table.datatable th.row-tq{width:45px}table.datatable th.row-signal{width:36px}table.datatable th.row-distance{width:90px}table.datatable th.row-inactive{width:130px}table.datatable tr.inactive{opacity:0.33}table.datatable tr.highlight{background:rgba(255,180,0,0.25)}canvas.signalgraph{margin-top:8px;width:100%}@media only screen and (max-width: 1250px){.container{max-width:none;margin:56px 0 0}header{height:56px;z-index:1;position:fixed}.datatable tr{display:block;margin-bottom:15px}.datatable tr:first-child{margin-bottom:0}.datatable th{display:none}.datatable td{display:block;position:relative;padding-left:150px;max-width:calc(100% - 150px)}.datatable td::before{position:absolute;left:5px;content:attr(data-label)}}@media only screen and (max-width: 700px){.container{display:block}.container>.frame+.frame{border-width:1px 0 0 0}}
++html,body,div,span,h1,h2,h3,dl,dt,dd,canvas,header,table,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{background:rgba(0,0,0,0.12);font-family:Roboto, Lucida Grande, sans, Arial;color:rgba(0,0,0,0.87);font-size:14px;line-height:1}a{color:rgba(220,0,103,0.87);text-decoration:none;margin:0;padding:0;font-size:100%;vertical-align:baseline;background:transparent}a:hover{text-decoration:underline}h1{font-weight:bold}h2{font-size:16px;margin-bottom:8px;color:rgba(0,0,0,0.54)}h3{font-size:15px;margin-top:8px;margin-bottom:4px;color:rgba(0,0,0,0.54)}header{display:flex;padding:0 14px;background:#dc0067;color:rgba(255,255,255,0.98);position:absolute;top:0;width:100%;box-sizing:border-box;height:20vh;z-index:-1;box-shadow:0px 5px 6px rgba(0,0,0,0.16),0px 1.5px 3px rgba(0,0,0,0.23);white-space:nowrap}header h1{font-size:24px;margin:5px 0;padding:3px 0;text-overflow:ellipsis;overflow:hidden;flex:1}.container{display:flex;max-width:90vw;margin:44px auto 12px auto;background:#fdfdfd;box-shadow:0px 5px 20px rgba(0,0,0,0.19),0px 3px 6px rgba(0,0,0,0.23)}.container>.frame{flex:1;border-style:solid;border-color:rgba(0,0,0,0.12);box-sizing:border-box;padding:8px 16px}.container>.frame+.frame{border-width:0 0 0 1px}.container>.frame-wide{flex:2}dt,th,td::before{font-weight:bold;color:rgba(0,0,0,0.87)}dt{margin-bottom:2px}th,td{text-align:left;padding:2px 16px 2px 0}th:last-child,td:last-child{padding-right:0}dd,td{font-weight:normal;font-size:0.9em;color:rgba(0,0,0,0.54)}dd{margin-bottom:8px}table{border-collapse:collapse;border-spacing:0}table.datatable{width:100%;table-layout:fixed}table.datatable th,table.datatable td{font-size:1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}table.datatable th.row-tq{width:45px}table.datatable th.row-signal{width:36px}table.datatable th.row-distance{width:90px}table.datatable th.row-inactive{width:130px}table.datatable tr.inactive{opacity:0.33}table.datatable tr.highlight{background:rgba(255,180,0,0.25)}canvas.signalgraph{margin-top:8px;width:100%}@media only screen and (max-width: 1250px){.container{max-width:none;margin:44px 0 0}header{height:44px;z-index:1;position:fixed}.datatable tr{display:block;margin-bottom:8px}.datatable tr:first-child{margin-bottom:0}.datatable th{display:none}.datatable td{display:block;position:relative;padding-left:150px;max-width:calc(100% - 150px)}.datatable td::before{position:absolute;left:5px;content:attr(data-label)}}@media only screen and (max-width: 700px){.container{display:block}.container>.frame+.frame{border-width:1px 0 0 0}}
+ @media (prefers-color-scheme: dark){:root{color-scheme:dark}body{background:#131015;color:#eee8f1}a{color:#e0317d}a:hover{color:#ee4b90}h2,h3,dd,td{color:#a79dad}dt,th,td::before{color:#eee8f1}header{background:#3a1628;color:#eee8f1;box-shadow:0 2px 6px rgba(0,0,0,.4)}.container{background:#1c181f;box-shadow:0 12px 34px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.4)}.container>.frame{border-color:#322b37}table.datatable tr.highlight{background:rgba(255,194,61,.18)}canvas.signalgraph{filter:invert(1) hue-rotate(180deg)}}
+diff --git a/package/gluon-status-page/sass/status-page.scss b/package/gluon-status-page/sass/status-page.scss
+index 24f312f..b61d276 100644
+--- a/package/gluon-status-page/sass/status-page.scss
++++ b/package/gluon-status-page/sass/status-page.scss
+@@ -54,14 +54,14 @@ h1 {
+ 
+ h2 {
+ 	font-size: 16px;
+-	margin-bottom: 16px;
++	margin-bottom: 8px;
+ 	color: rgba(0, 0, 0, 0.54);
+ }
+ 
+ h3 {
+ 	font-size: 15px;
+-	margin-top: 16px;
+-	margin-bottom: 8px;
++	margin-top: 8px;
++	margin-bottom: 4px;
+ 	color: rgba(0, 0, 0, 0.54);
+ }
+ 
+@@ -81,8 +81,8 @@ header {
+ 
+ 	h1 {
+ 		font-size: 24px;
+-		margin: 10px 0;
+-		padding: 6px 0;
++		margin: 5px 0;
++		padding: 3px 0;
+ 
+ 		text-overflow: ellipsis;
+ 		overflow: hidden;
+@@ -94,7 +94,7 @@ header {
+ 	display: flex;
+ 
+ 	max-width: 90vw;
+-	margin: 64px auto 24px auto;
++	margin: 44px auto 12px auto;
+ 	background: rgb(253, 253, 253);
+ 	box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.19), 0px 3px 6px rgba(0, 0, 0, 0.23);
+ 
+@@ -104,7 +104,7 @@ header {
+ 		border-color: rgba(0, 0, 0, 0.12);
+ 
+ 		box-sizing: border-box;
+-		padding: 16px;
++		padding: 8px 16px;
+ 
+ 		& + .frame {
+ 			border-width: 0 0 0 1px;
+@@ -122,12 +122,12 @@ dt, th, td::before {
+ }
+ 
+ dt {
+-	margin-bottom: 4px;
++	margin-bottom: 2px;
+ }
+ 
+ th, td {
+ 	text-align: left;
+-	padding: 4px 16px 4px 0;
++	padding: 2px 16px 2px 0;
+ 
+ 	&:last-child {
+ 		padding-right: 0;
+@@ -141,7 +141,7 @@ dd, td {
+ }
+ 
+ dd {
+-	margin-bottom: 16px;
++	margin-bottom: 8px;
+ }
+ 
+ table {
+@@ -195,11 +195,11 @@ canvas.signalgraph {
+ @media only screen and (max-width: 1250px) {
+ 	.container {
+ 		max-width: none;
+-		margin: 56px 0 0;
++		margin: 44px 0 0;
+ 	}
+ 
+ 	header {
+-		height: 56px;
++		height: 44px;
+ 		z-index: 1;
+ 		position: fixed;
+ 	}
+@@ -207,7 +207,7 @@ canvas.signalgraph {
+ 	.datatable {
+ 		tr {
+ 			display: block;
+-			margin-bottom: 15px;
++			margin-bottom: 8px;
+ 
+ 			&:first-child {
+ 				margin-bottom: 0;
