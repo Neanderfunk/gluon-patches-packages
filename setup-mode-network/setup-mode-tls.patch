@@ -1,0 +1,104 @@
+Setup-Mode: Config-Mode auch per https auf Port 443 (Geraete mit TLS).
+
+Setzt auf setup-mode-captive und setup-mode-wifi auf (S50uhttpd mit -E,
+cgi-bin/portal).
+
+Browser mit "nur HTTPS" bzw. "immer sichere Verbindungen" versuchen auch
+bei 192.168.1.1 zuerst https://. Ohne Dienst auf Port 443 sehen die
+Nutzenden nur eine Fehlerseite, "es kommt gar nichts". Eine
+Zertifikatswarnung ist besser als das (adorfer, 16.10.2026).
+
+  S50uhttpd       derselbe uhttpd lauscht zusaetzlich mit -s 0.0.0.0:443,
+                  selbstsigniertes Zertifikat (EC P-256, CN 192.168.1.1).
+                  Schluessel entsteht bei jedem Start in den Setup-Mode in
+                  /tmp/setup-mode-tls (px5g): nichts im Flash, kein
+                  Schluessel im Image. Deshalb kommt die Warnung nach jedem
+                  Neustart wieder.
+  cgi-bin/portal  bleibt beim Schema der Anfrage (HTTPS=on -> https://).
+  gluon-tls       zieht px5g-mbedtls mit (~30 KB squashfs).
+
+Bewusst keine Umleitung auf http://: Im strengen HTTPS-Modus kaeme nach der
+Zertifikatswarnung eine zweite Warnseite fuer den Wechsel auf http. Die
+Setup-Seite nutzt nur relative Links, und was sie von aussen laedt
+(Kartenkacheln, OpenLayers) ist schon https. Speichern geht: gluon-web
+nimmt beim Origin-Check das Schema aus HTTPS (check_post_origin).
+
+Ohne Feature tls (tiny, lowmem_dualradio) fehlen px5g bzw. libustream-ssl,
+dann bleibt es bei Port 80 wie bisher.
+
+diff --git a/package/gluon-config-mode-core/files/lib/gluon/config-mode/www/cgi-bin/portal b/package/gluon-config-mode-core/files/lib/gluon/config-mode/www/cgi-bin/portal
+index 962ace9..e82160d 100755
+--- a/package/gluon-config-mode-core/files/lib/gluon/config-mode/www/cgi-bin/portal
++++ b/package/gluon-config-mode-core/files/lib/gluon/config-mode/www/cgi-bin/portal
+@@ -12,7 +12,11 @@ case "$SERVER_ADDR" in
+ 	''|*:*) HOST=192.168.1.1 ;;
+ 	*) HOST="$SERVER_ADDR" ;;
+ esac
+-URL="http://$HOST/cgi-bin/config"
++# Same scheme as the request: the config mode also answers on port 443
++# (S50uhttpd), and a browser that came in via https stays there.
++SCHEME=http
++[ "$HTTPS" = on ] && SCHEME=https
++URL="$SCHEME://$HOST/cgi-bin/config"
+ 
+ printf 'Status: 302 Found\r\n'
+ printf 'Location: %s\r\n' "$URL"
+diff --git a/package/gluon-config-mode-core/files/lib/gluon/setup-mode/rc.d/S50uhttpd b/package/gluon-config-mode-core/files/lib/gluon/setup-mode/rc.d/S50uhttpd
+index 0330811..bdbdf68 100755
+--- a/package/gluon-config-mode-core/files/lib/gluon/setup-mode/rc.d/S50uhttpd
++++ b/package/gluon-config-mode-core/files/lib/gluon/setup-mode/rc.d/S50uhttpd
+@@ -5,11 +5,40 @@ START=50
+ USE_PROCD=1
+ 
+ UHTTPD_BIN="/usr/sbin/uhttpd"
++TLS_DIR=/tmp/setup-mode-tls
++
++# The config mode also on port 443, with a self-signed certificate. Browsers
++# set to HTTPS-only ("always use secure connections") try https:// first, also
++# for 192.168.1.1; with nothing on port 443 they show a bare connection error.
++# A certificate warning is better than that, and once it is accepted the setup
++# page works over https just the same: it only uses relative links, and what
++# it loads from outside (map tiles, OpenLayers) is https already.
++#
++# Only with TLS in the image (feature "tls": libustream-mbedtls, px5g-mbedtls).
++# The key is created in /tmp on each boot into the config mode: nothing is
++# written to flash and no key ships in the image. Hence also a new warning
++# after every reboot.
++setup_tls() {
++	[ -x /usr/sbin/px5g ] && [ -e /lib/libustream-ssl.so ] || return 1
++
++	[ -s "$TLS_DIR/key.der" ] && [ -s "$TLS_DIR/crt.der" ] && return 0
++
++	mkdir -p "$TLS_DIR"
++	( umask 077; /usr/sbin/px5g selfsigned -der -days 3650 \
++		-newkey ec -pkeyopt ec_paramgen_curve:P-256 \
++		-keyout "$TLS_DIR/key.der" -out "$TLS_DIR/crt.der" \
++		-subj /CN=192.168.1.1 ) >/dev/null 2>&1
++}
+ 
+ start_service() {
++	local tls=
++
++	setup_tls && tls="-s 0.0.0.0:443 -C $TLS_DIR/crt.der -K $TLS_DIR/key.der"
++
+ 	# -E: unknown paths go to the setup page, see cgi-bin/portal
+ 	procd_open_instance
+ 	procd_set_param respawn
+-	procd_set_param command "$UHTTPD_BIN" -f -h /lib/gluon/config-mode/www -x /cgi-bin -E /cgi-bin/portal -A 1 -R -p 0.0.0.0:80
++	# shellcheck disable=SC2086 # $tls: several arguments, no spaces in them
++	procd_set_param command "$UHTTPD_BIN" -f -h /lib/gluon/config-mode/www -x /cgi-bin -E /cgi-bin/portal -A 1 -R -p 0.0.0.0:80 $tls
+ 	procd_close_instance
+ }
+diff --git a/package/gluon-tls/Makefile b/package/gluon-tls/Makefile
+index 6d02e49..ecd3a46 100644
+--- a/package/gluon-tls/Makefile
++++ b/package/gluon-tls/Makefile
+@@ -5,7 +5,7 @@ PKG_NAME:=gluon-tls
+ include ../gluon.mk
+ 
+ define Package/gluon-tls
+-  DEPENDS:=+libustream-mbedtls +ca-bundle
++  DEPENDS:=+libustream-mbedtls +ca-bundle +px5g-mbedtls
+   TITLE:=Enable TLS support
+ endef
+ 
