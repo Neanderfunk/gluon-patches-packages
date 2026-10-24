@@ -63,6 +63,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
 | `setup-mode-network/setup-mode-tls.sh` | Config-Mode auch per https auf Port 443, selbstsigniertes Zertifikat aus `px5g` in /tmp | Feature `tls` (sonst nur Port 80) |
+| `respondd/respondd-wifi-frequency.sh` | respondd meldet die Frequenz (MHz) je WLAN-Interface in `neighbours.wifi`, damit die Karte das Band einer Verbindung zeigen kann. Übernommen von 4830.org ([ffgtso/site-4830-v2025.1](https://github.com/ffgtso/site-4830-v2025.1) `28c7644`) | Auswertung in yanic/meshviewer offen |
 | `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
 
 Alle Skripte laufen post-update. `setup-mode-hostnames` und

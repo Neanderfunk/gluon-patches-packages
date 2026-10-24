@@ -1,0 +1,31 @@
+respondd: Frequenz (MHz) je WLAN-Interface in neighbours.wifi melden.
+
+Uebernommen von Freifunk Kreis Guetersloh / 4830.org:
+  https://github.com/ffgtso/site-4830-v2025.1, Commit 28c7644 (22.10.2026),
+  patches/0020-respondd-report-WiFi-neighbour-interface-frequency.patch
+Beschreibung dort: https://4830.org/2026/10/23/kartenerweiterung/
+
+Je WLAN-Interface in nodeinfo/neighbours ("wifi": {"<mac>": {...}})
+steht zusaetzlich "frequency": <MHz>, gelesen ueber iwinfo. Daraus kann
+die Karte das Band einer WLAN-Verbindung ableiten (2.4/5/6 GHz), etwa um
+grosse Meshes aufzuteilen. Aeltere Auswerter ignorieren das Feld.
+Auf der Kartenseite braucht es Unterstuetzung im Collector (bei uns yanic)
+und in der Anzeige (meshviewer); 4830 nutzt hopglass(-server).
+
+Unveraendert uebernommen, passt mit fuzz 0 auf Gluon 0ad3ad5 (v2025.1.x).
+
+diff --git a/package/gluon-respondd/src/respondd-neighbours.c b/package/gluon-respondd/src/respondd-neighbours.c
+index f86dac4..98afaec 100644
+--- a/package/gluon-respondd/src/respondd-neighbours.c
++++ b/package/gluon-respondd/src/respondd-neighbours.c
+@@ -42,6 +42,10 @@ static struct json_object * get_wifi_neighbours(const char *ifname) {
+ 
+ 	struct json_object *ret = json_object_new_object();
+ 
++	int frequency;
++	if (iw->frequency(ifname, &frequency) == 0 && frequency > 0)
++		json_object_object_add(ret, "frequency", json_object_new_int(frequency));
++
+ 	if (json_object_object_length(neighbours))
+ 		json_object_object_add(ret, "neighbours", neighbours);
+ 	else
