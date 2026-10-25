@@ -29,7 +29,7 @@ Ohne das Paket (x86, ERX, oder start = 'off') aendert beides nichts: br-setup
 ist das einzige Netz des Setup-Modes, und am LAN kommen die Anfragen ohnehin
 ueber 192.168.1.1.
 
-Geprueft von der Paketfeed-Session am Archer C25 v1 (13.09.2026) mit genau
+Geprueft am Archer C25 v1 (13.09.2026) mit genau
 diesem S60dnsmasq und dem Paket: beide dnsmasq laufen, am LAN 302 auf
 192.168.1.1, im Setup-WLAN /generate_204 auf die Setup-Seite ueber
 198.51.100.1.
