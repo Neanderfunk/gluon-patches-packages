@@ -51,6 +51,7 @@ POST_UPDATE=(
   setup-mode-network/setup-mode-captive.sh      # Setup-Mode: Portal-Erkennung fuehrt auf die Setup-Seite
   setup-mode-network/setup-mode-wifi.sh         # Setup-Mode: dnsmasq an br-setup (fuer neanderfunk-setup-wifi)
   setup-mode-network/setup-mode-tls.sh          # Setup-Mode: Config-Mode auch per https auf Port 443 (Feature tls)
+  config-mode/network-one-role.sh               # Config-Mode: Seite Netzwerk mit genau einer Rolle je Schnittstelle (Radio-Buttons)
   hostname/default-hostname.sh                  # Gluon-Core: Vorgabe-Hostname <Praefix><Modell>-<4 Stellen> (neanderfunk-default-hostname)
   respondd/respondd-wifi-frequency.sh           # respondd: Frequenz (MHz) je WLAN-Interface in neighbours.wifi (von 4830.org)
 )
