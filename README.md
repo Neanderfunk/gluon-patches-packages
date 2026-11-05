@@ -63,6 +63,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
 | `setup-mode-network/setup-mode-tls.sh` | Config-Mode auch per https auf Port 443, selbstsigniertes Zertifikat aus `px5g` in /tmp | Feature `tls` (sonst nur Port 80) |
+| `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH | passt zu `neanderfunk-port-roles` |
 | `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
 
 Alle Skripte laufen post-update. `setup-mode-hostnames` und
