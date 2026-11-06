@@ -58,6 +58,7 @@ umgeschrieben hat.
 | `status-page/statuspage-darkmode.sh` | Statusseite: Darkmode nach `prefers-color-scheme`, Farben aus dem Darkmode von `neanderfunk-config-mode-theme` | |
 | `status-page/statuspage-ssid-owe-private.sh` | Statusseite: SSID des OWE-BSS und des privaten WLANs je Radio, sonst "aus"; nie den Schlüssel | `neanderfunk-status-page` |
 | `status-page/statuspage-gateway-name.sh` | Statusseite: Gateway mit Hostnamen (per respondd vom Gateway selbst), MAC als Tooltip | `neanderfunk-status-page` (CGI `gateway-name`) |
+| `status-page/statuspage-ddhcpd.sh` | Statusseite: Block „DHCP (ddhcpd)“ mit Pool, Leases, Roaming seit Start und IPv4-Clients, live | `neanderfunk-respondd`, `neanderfunk-status-page`, `neanderfunk-ddhcpd` |
 | `status-page/statuspage-distance-wired.sh` | Statusseite: Entfernung nur bei WLAN-Nachbarn setzen; behebt einen TypeError aus Gluon bei Nachbarn am Kabel | |
 | `setup-mode-network/setup-mode-hostnames.sh` | `gluon.setup` und `setup.gluon` per DNS auf 192.168.1.1 | |
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
@@ -158,4 +159,15 @@ linke Spalte auf einem 1080er-Monitor auch im Browserfenster ohne Scrollen
 passt (Wunsch adorfer 13.10.2026). SCSS und vorkompilierte CSS; setzt auf
 `statuspage-darkmode` auf. An der FB4040 Schulstr7 per Bind-Mount geprüft:
 bei 1920x950 endet die linke Spalte bei ~805 px.
+
+### status-page/statuspage-ddhcpd
+
+Unter „Clients“ ein Block „DHCP (ddhcpd)“, wenn `neanderfunk-ddhcpd`
+installiert ist: Zustand (läuft, Lernphase, aus; vom Laden der Seite),
+Blöcke frei/eigene/fremd, Leases vergeben/angeboten/frei und „nicht lokal“,
+Roaming seit Start rein/raus, IPv4-Clients und wie viele davon aus dem
+ddhcpd-Bereich. Zahlen live aus `statistics.neanderfunk.ddhcpd` und
+`clients_ipv4` (`neanderfunk-respondd`), Texte aus
+`neanderfunk-status-page`. Läuft der Daemon nicht, nur „Status: aus“. Wunsch
+adorfer 06.11.2026. Nicht am Gerät geprüft.
 

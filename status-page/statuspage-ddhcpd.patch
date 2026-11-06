@@ -1,0 +1,88 @@
+Statusseite: Block "DHCP (ddhcpd)"
+
+Unter "Clients" ein Block fuer den verteilten DHCP-Server, wenn
+neanderfunk-ddhcpd installiert ist (statistics.neanderfunk.ddhcpd aus
+neanderfunk-respondd):
+
+  Status               laeuft / Lernphase / aus      (vom Laden der Seite)
+  Bloecke              frei 62, eigene 1, fremd 0    (live)
+  Leases               vergeben 2, angeboten 0, frei 2
+                       nicht lokal 1
+  Roaming seit Start   rein 0, raus 0
+  IPv4-Clients         14, davon ddhcpd 9
+
+"nicht lokal": vergebene Leases, deren Client gerade nicht hier haengt.
+Roaming rein: ein Client mit Adresse eines anderen Knotens ist hierher
+gekommen; raus: ein anderer Knoten fragt fuer einen Client dieses Knotens.
+Laeuft der Daemon nicht, steht nur "Status: aus" da.
+
+Wunsch adorfer (06.11.2026, ueber Supernodes und Routing). Texte im Katalog
+neanderfunk-status-page. Ohne neanderfunk-ddhcpd kein Block.
+
+Ein eigener Patch am Ende der Statusseiten-Kette, nach statuspage-compact.
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 44606655..ea31dc83 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -315,6 +315,16 @@
+ 	local function format_temp(t)
+ 		return string.format('%.0f °C', t)
+ 	end
++	-- ddhcpd aus neanderfunk-respondd (statistics.neanderfunk.ddhcpd), nur
++	-- wenn das Paket installiert ist. Zahlen live, der Zustand (laeuft,
++	-- Lernphase, aus) vom Laden der Seite. Laeuft der Daemon nicht, liefert
++	-- respondd nur running=false und keine Zahlen.
++	local ddhcpd = type(nf_stats.ddhcpd) == 'table' and nf_stats.ddhcpd or nil
++	local ddhcpd_ip4 = type(nf_stats.clients_ipv4) == 'table' and nf_stats.clients_ipv4 or {}
++	local function ddhcpd_val(group, key)
++		local g = ddhcpd and ddhcpd[group]
++		return type(g) == 'table' and g[key] or nil
++	end
+ 	-- Beides steht in einer Zeile "RAM/Flash". Fehlt ausnahmsweise einer der
+ 	-- Werte, haelt das Fragezeichen die Zuordnung zur Beschriftung aufrecht.
+ 	local ram_flash
+@@ -535,6 +545,43 @@
+ 						<% end -%>
+ 					</tbody>
+ 				</table>
++				<% if ddhcpd then -%>
++					<h3>DHCP (ddhcpd)</h3>
++					<table>
++						<tbody>
++							<tr>
++								<th><%| nf.translate('Status') %></th>
++								<td><%| not ddhcpd.running and nf.translate('not running') or (ddhcpd.learning and nf.translate('learning phase') or nf.translate('running')) %></td>
++							</tr>
++							<% if ddhcpd.running then -%>
++								<tr>
++									<th><%| nf.translate('Blocks') %></th>
++									<td><%| nf.translate('free') %> <%= live('neanderfunk/ddhcpd/blocks/free', ddhcpd_val('blocks', 'free')) %>, <%| nf.translate('own') %> <%= live('neanderfunk/ddhcpd/blocks/ours', ddhcpd_val('blocks', 'ours')) %>, <%| nf.translate('foreign') %> <%= live('neanderfunk/ddhcpd/blocks/foreign', ddhcpd_val('blocks', 'foreign')) %></td>
++								</tr>
++								<tr>
++									<th><%| nf.translate('Leases') %></th>
++									<td><%| nf.translate('leased') %> <%= live('neanderfunk/ddhcpd/leases/leased', ddhcpd_val('leases', 'leased')) %>, <%| nf.translate('offered') %> <%= live('neanderfunk/ddhcpd/leases/offered', ddhcpd_val('leases', 'offered')) %>, <%| nf.translate('free') %> <%= live('neanderfunk/ddhcpd/leases/free', ddhcpd_val('leases', 'free')) %></td>
++								</tr>
++								<tr>
++									<th></th>
++									<td<%= attr('title', nf.translate('leased, but the client is not connected here right now')) %>><%| nf.translate('not local') %> <%= live('neanderfunk/ddhcpd/leases/away', ddhcpd_val('leases', 'away')) %></td>
++								</tr>
++								<% if ddhcpd.roaming then -%>
++									<tr>
++										<th><%| nf.translate('Roaming since start') %></th>
++										<td<%= attr('title', nf.translate('in: clients with an address of another node came here; out: another node asked for a client of this node')) %>><%| nf.translate('in') %> <%= live('neanderfunk/ddhcpd/roaming/in', ddhcpd_val('roaming', 'in')) %>, <%| nf.translate('out') %> <%= live('neanderfunk/ddhcpd/roaming/out', ddhcpd_val('roaming', 'out')) %></td>
++									</tr>
++								<%- end %>
++							<%- end %>
++							<% if ddhcpd_ip4.total then -%>
++								<tr>
++									<th><%| nf.translate('IPv4 clients') %></th>
++									<td><%= live('neanderfunk/clients_ipv4/total', ddhcpd_ip4.total) %>, <%| nf.translate('of them from ddhcpd') %> <%= live('neanderfunk/clients_ipv4/ddhcpd', ddhcpd_ip4.ddhcpd) %></td>
++								</tr>
++							<%- end %>
++						</tbody>
++					</table>
++				<%- end %>
+ 				<% if radios[1] then -%>
+ 					<h3><%:Radios%></h3>
+ 					<table>
