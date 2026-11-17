@@ -1,0 +1,22 @@
+Statusseite: Domain-Code hinter dem Domainnamen
+
+In der Zeile "Domain" steht hinter dem Anzeigenamen aus site.domain_names
+der Code der Domain in Klammern, etwa "Neanderfunk Diaspora (21_dias)".
+In der Multi-Domain-Firmware tragen mehrere Domains denselben Anzeigenamen
+(LVR-HPH), und die Nummer ist das, wonach gefragt wird. Wunsch adorfer
+17.11.2026. Ohne Domains (Single-Domain-Site) fehlt die Zeile wie bisher.
+
+Setzt auf dem Zustand nach statuspage-ddhcpd auf.
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index ea31dc8..24861d4 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -499,6 +499,7 @@
+ 							<% if nodeinfo.system.domain_code ~= nodeinfo.system.primary_domain_code then %>
+ 							(<%| site.domain_names[nodeinfo.system.primary_domain_code]() %>)
+ 							<%- end %>
++							(<%| nodeinfo.system.domain_code %>)
+ 						</dd>
+ 					<%- end %>
+ 					<% if nodeinfo.system.role then -%>

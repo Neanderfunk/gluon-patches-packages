@@ -59,6 +59,7 @@ umgeschrieben hat.
 | `status-page/statuspage-ssid-owe-private.sh` | Statusseite: SSID des OWE-BSS und des privaten WLANs je Radio, sonst "aus"; nie den Schlüssel | `neanderfunk-status-page` |
 | `status-page/statuspage-gateway-name.sh` | Statusseite: Gateway mit Hostnamen (per respondd vom Gateway selbst), MAC als Tooltip | `neanderfunk-status-page` (CGI `gateway-name`) |
 | `status-page/statuspage-ddhcpd.sh` | Statusseite: Block „DHCP (ddhcpd)“ mit Pool, Leases, Roaming seit Start und IPv4-Clients, live | `neanderfunk-respondd`, `neanderfunk-status-page`, `neanderfunk-ddhcpd` |
+| `status-page/statuspage-domaincode.sh` | Statusseite: Domain-Code hinter dem Domainnamen, etwa „Neanderfunk Diaspora (21_dias)“ | |
 | `status-page/statuspage-distance-wired.sh` | Statusseite: Entfernung nur bei WLAN-Nachbarn setzen; behebt einen TypeError aus Gluon bei Nachbarn am Kabel | |
 | `setup-mode-network/setup-mode-hostnames.sh` | `gluon.setup` und `setup.gluon` per DNS auf 192.168.1.1 | |
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
@@ -171,4 +172,13 @@ ddhcpd-Bereich. Zahlen live aus `statistics.neanderfunk.ddhcpd` und
 `clients_ipv4` (`neanderfunk-respondd`), Texte aus
 `neanderfunk-status-page`. Läuft der Daemon nicht, nur „Status: aus“. Wunsch
 adorfer 06.11.2026. Nicht am Gerät geprüft.
+
+### status-page/statuspage-domaincode
+
+In der Zeile „Domain“ steht hinter dem Anzeigenamen der Code der Domain in
+Klammern, etwa „Neanderfunk Diaspora (21_dias)“. In der Multi-Domain-Firmware
+tragen mehrere Domains denselben Anzeigenamen (LVR-HPH), gefragt wird nach
+der Nummer. Ohne Domains (Single-Domain-Site) fehlt die Zeile wie bisher.
+Setzt auf `statuspage-ddhcpd` auf. Wunsch adorfer 17.11.2026; an einem
+Testknoten mit 26111701bro per Bind-Mount geprüft.
 
