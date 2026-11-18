@@ -66,6 +66,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
 | `setup-mode-network/setup-mode-tls.sh` | Config-Mode auch per https auf Port 443, selbstsigniertes Zertifikat aus `px5g` in /tmp | Feature `tls` (sonst nur Port 80) |
 | `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH | passt zu `neanderfunk-port-roles` |
+| `config-mode/domain-select-current.sh` | Domain-Auswahl: aktuelle Domain immer in der Liste und vorbelegt, auch versteckt (frischer Knoten in `default_domain`) | |
 | `respondd/respondd-wifi-frequency.sh` | respondd meldet die Frequenz (MHz) je WLAN-Interface in `neighbours.wifi`, damit die Karte das Band einer Verbindung zeigen kann. Übernommen von 4830.org ([ffgtso/site-4830-v2025.1](https://github.com/ffgtso/site-4830-v2025.1) `28c7644`) | Auswertung in yanic/meshviewer offen |
 | `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
 
@@ -182,3 +183,21 @@ der Nummer. Ohne Domains (Single-Domain-Site) fehlt die Zeile wie bisher.
 Setzt auf `statuspage-ddhcpd` auf. Wunsch adorfer 17.11.2026; an einem
 Testknoten mit 26111701bro per Bind-Mount geprüft.
 
+### config-mode/domain-select-current
+
+Gluons Domain-Auswahl nimmt die aktuelle Domain nur dann trotz
+`hide_domain` in die Liste und als Vorbelegung, wenn der Knoten als
+konfiguriert gilt. Ein frisch geflashter Knoten ohne erkannte Altwerte steht
+nach `005-set-domain` in `default_domain` (Multi-Image: `25_hvb`, versteckt).
+Ohne Vorbelegung zeigte der Browser den ersten Eintrag nach Namen, und wer
+einfach speicherte, landete dort. Jetzt steht die aktuelle Domain immer in der
+Liste und ist vorbelegt; andere versteckte Domains bleiben versteckt. Auftrag
+adorfer 18.11.2026. Offline-Test ohne Gluon (fünf Fälle: frisch, Altwerte
+erkannt, Altwerte auf versteckte Domain, konfiguriert, konfiguriert in
+`default_domain`):
+
+```
+lua5.1 config-mode/domain-select-current.test.lua <gluon>/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+```
+
+Gegen die ungepatchte Datei scheitert der Fall „frisch“.

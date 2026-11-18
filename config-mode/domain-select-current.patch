@@ -1,0 +1,49 @@
+Config-Mode: aktuelle Domain immer in der Liste und vorbelegt
+
+Gluons Domain-Auswahl (gluon-config-mode-domain-select) nimmt die aktuelle
+Domain nur dann trotz hide_domain in die Liste und als Vorbelegung, wenn der
+Knoten "configured" gilt (setup_mode.configured = 1 oder Domain ungleich
+default_domain). Ein frisch geflashter Knoten ohne erkannte Altwerte steht
+nach 005-set-domain in default_domain (bei uns 25_hvb, versteckt, der Name
+bittet um eine andere Wahl). Die fehlte dann in der Liste, es gab keine
+Vorbelegung, der Browser zeigte den ersten Eintrag nach Namen, und wer
+einfach speicherte, landete dort (Fehler aus 2023.2.6).
+
+Jetzt steht die aktuelle Domain (gluon.core.domain) immer in der Liste und
+ist immer vorbelegt; fuer alle anderen versteckten Domains gilt hide_domain
+weiter. Auftrag adorfer 18.11.2026. Offline-Test:
+config-mode/domain-select-current.test.lua.
+
+diff --git a/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua b/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+index 72c3529..a2dcf81 100644
+--- a/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
++++ b/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+@@ -7,11 +7,14 @@ return function(form, uci)
+ 	local util = require 'gluon.util'
+ 
+ 	local selected_domain = uci:get('gluon', 'core', 'domain')
+-	local configured = uci:get_first('gluon-setup-mode','setup_mode', 'configured') == '1' or
+-		(selected_domain ~= site.default_domain())
+ 
++	-- Neanderfunk: the current domain is always listed and preselected, also
++	-- when it is hidden and the node is not configured yet. A fresh node sits
++	-- in default_domain (hidden, its name asks to pick another one); without
++	-- this, the form fell back to the first entry by name, and saving
++	-- unchanged moved the node into an arbitrary domain.
+ 	local function hide_domain_code(domain, code)
+-		if configured and code == selected_domain then
++		if code == selected_domain then
+ 			return false
+ 		elseif type(domain.hide_domain) == 'table' then
+ 			return util.contains(domain.hide_domain, code)
+@@ -41,9 +44,7 @@ return function(form, uci)
+ 	local s = form:section(Section, nil, site_i18n.translate('gluon-config-mode:domain-select'))
+ 	local o = s:option(ListValue, 'domain', site_i18n.translate('gluon-config-mode:domain'))
+ 
+-	if configured then
+-		o.default = selected_domain
+-	end
++	o.default = selected_domain
+ 
+ 	for _, domain in ipairs(get_domain_list()) do
+ 		o:value(domain.domain_code, domain.domain_name)
