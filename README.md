@@ -67,6 +67,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-tls.sh` | Config-Mode auch per https auf Port 443, selbstsigniertes Zertifikat aus `px5g` in /tmp | Feature `tls` (sonst nur Port 80) |
 | `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH | passt zu `neanderfunk-port-roles` |
 | `config-mode/domain-select-current.sh` | Domain-Auswahl: aktuelle Domain immer in der Liste und vorbelegt, auch versteckt (frischer Knoten in `default_domain`) | |
+| `config-mode/geo-location-domain-map.sh` | Karte im Wizard startet auf der aktuellen Domain und folgt der Domain-Auswahl, solange keine Position gesetzt ist; Domain-Schlüssel `neanderfunk_map` | Multi-Domain-Site mit `neanderfunk_map` je Domain |
 | `respondd/respondd-wifi-frequency.sh` | respondd meldet die Frequenz (MHz) je WLAN-Interface in `neighbours.wifi`, damit die Karte das Band einer Verbindung zeigen kann. Übernommen von 4830.org ([ffgtso/site-4830-v2025.1](https://github.com/ffgtso/site-4830-v2025.1) `28c7644`) | Auswertung in yanic/meshviewer offen |
 | `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
 
@@ -201,3 +202,29 @@ lua5.1 config-mode/domain-select-current.test.lua <gluon>/package/gluon-config-m
 ```
 
 Gegen die ungepatchte Datei scheitert der Fall „frisch“.
+
+### config-mode/geo-location-domain-map
+
+Gluon erlaubt Mittelpunkt und Zoom der Karte nur in der Site, im
+Multi-Domain-Image startete die Karte also für alle Domains gleich. Neuer,
+optionaler Domain-Schlüssel (check_site `in_domain`, `zoom` optional):
+
+```lua
+neanderfunk_map = { center = { lat = 51.45, lon = 9.77 }, zoom = 5 },
+```
+
+Die Karte startet auf dem Ausschnitt der aktuellen Domain (ohne Eintrag auf
+dem der Site). Schaltet man im Wizard die Domain-Auswahl um, wandert der
+Ausschnitt zur gewählten Domain, aber nur, solange der Knoten keine Position
+hat und niemand auf die Karte geklickt oder Koordinaten eingetippt hat; die
+Koordinaten selbst ändert das nie. Die Werte aller Domains kommen serverseitig
+aus `/lib/gluon/domains/*.json`, nachgeladen wird nichts. Setzt auf
+`status-page/web-static-version` auf (`map.html`). Auftrag adorfer
+18.11.2026. Offline-Test der Domainwerte (zehn Prüfungen):
+
+```
+lua5.1 config-mode/geo-location-domain-map.test.lua <gluon>/package/gluon-config-mode-geo-location-osm/luasrc/usr/lib/lua/gluon/config-mode/geo-location-osm.lua
+```
+
+Das Verhalten im Browser ist noch nicht am Gerät geprüft.
+

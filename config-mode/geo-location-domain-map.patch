@@ -1,0 +1,151 @@
+Config-Mode: Karte startet auf der Domain und folgt der Domain-Auswahl
+
+Gluon erlaubt config_mode.geo_location.osm.center/zoom nur in der Site. Im
+Multi-Domain-Image startet die Karte im Wizard deshalb fuer alle Domains auf
+demselben Ausschnitt. Neu ist der optionale Domain-Schluessel
+
+  neanderfunk_map = { center = { lat = .., lon = .. }, zoom = .. }
+
+(check_site: in_domain; zoom optional). Die Karte startet auf dem Ausschnitt
+der aktuellen Domain, ohne Eintrag wie bisher auf dem der Site. Wird im
+Wizard die Domain-Auswahl umgeschaltet, wandert der Ausschnitt zur gewaehlten
+Domain. Das passiert nur, solange der Knoten keine Position hat und niemand
+auf die Karte geklickt oder Koordinaten eingetippt hat, und es bewegt nur den
+Ausschnitt, nie die Koordinaten. Die Werte aller Domains liest
+geo-location-osm.lua serverseitig aus /lib/gluon/domains/*.json; nachgeladen
+wird nichts. Auftrag adorfer 18.11.2026. Offline-Test:
+config-mode/geo-location-domain-map.test.lua.
+
+Setzt auf status-page/web-static-version auf (Kontext in map.html).
+
+diff --git a/package/gluon-config-mode-geo-location-osm/check_site.lua b/package/gluon-config-mode-geo-location-osm/check_site.lua
+index 2b3b0cb..af8b425 100644
+--- a/package/gluon-config-mode-geo-location-osm/check_site.lua
++++ b/package/gluon-config-mode-geo-location-osm/check_site.lua
+@@ -8,3 +8,12 @@ if need_table(in_site({'config_mode', 'geo_location', 'osm', 'tile_layer'}), nil
+ 	need_string(in_site({'config_mode', 'geo_location', 'osm', 'tile_layer', 'url'}))
+ 	need_string(in_site({'config_mode', 'geo_location', 'osm', 'tile_layer', 'attributions'}))
+ end
++
++-- Neanderfunk: Kartenausschnitt je Domain (Multi-Domain-Image). Die Karte im
++-- Config-Mode startet auf der aktuellen Domain und folgt der Domain-Auswahl;
++-- ohne Eintrag gilt config_mode.geo_location.osm.center/zoom der Site.
++if need_table(in_domain({'neanderfunk_map'}), nil, false) then
++	need_number(in_domain({'neanderfunk_map', 'center', 'lat'}))
++	need_number(in_domain({'neanderfunk_map', 'center', 'lon'}))
++	need_number(in_domain({'neanderfunk_map', 'zoom'}), false)
++end
+diff --git a/package/gluon-config-mode-geo-location-osm/luasrc/usr/lib/lua/gluon/config-mode/geo-location-osm.lua b/package/gluon-config-mode-geo-location-osm/luasrc/usr/lib/lua/gluon/config-mode/geo-location-osm.lua
+index 39f968c..c321e93 100644
+--- a/package/gluon-config-mode-geo-location-osm/luasrc/usr/lib/lua/gluon/config-mode/geo-location-osm.lua
++++ b/package/gluon-config-mode-geo-location-osm/luasrc/usr/lib/lua/gluon/config-mode/geo-location-osm.lua
+@@ -14,14 +14,54 @@ function M.help(i18n)
+ 	)
+ end
+ 
++-- Neanderfunk: neanderfunk_map = { center = { lat, lon }, zoom } je Domain.
++-- Liefert {lon, lat, zoom} oder nil, wenn der Eintrag fehlt oder unvollstaendig
++-- ist; zoom darf fehlen.
++local function domain_map(m)
++	if type(m) ~= 'table' or type(m.center) ~= 'table' then
++		return nil
++	end
++	local lat, lon = tonumber(m.center.lat), tonumber(m.center.lon)
++	if not lat or not lon then
++		return nil
++	end
++	return { lon = lon, lat = lat, zoom = tonumber(m.zoom) }
++end
++
++-- Kartenausschnitt aller Domains fuer die Domain-Auswahl im Wizard, aus
++-- /lib/gluon/domains/*.json (auch Alias-Dateien). Leer ohne Multi-Domain.
++function M.domain_maps(dir)
++	local json = require 'jsonc'
++	local util = require 'gluon.util'
++	local maps = {}
++	for _, path in ipairs(util.glob((dir or '/lib/gluon/domains') .. '/*.json')) do
++		local code = path:match('([^/]+)%.json$')
++		local domain = json.load(path)
++		local m = domain and domain_map(domain.neanderfunk_map)
++		if code and m then
++			maps[code] = m
++		end
++	end
++	return maps
++end
++
+ function M.options()
+ 	local config = site.config_mode.geo_location.osm
+ 
++	-- Startausschnitt: der der aktuellen Domain, sonst der der Site
++	local zoom, pos = config.zoom(12), config.center()
++	local m = domain_map(site.neanderfunk_map())
++	if m then
++		pos = { lon = m.lon, lat = m.lat }
++		zoom = m.zoom or zoom
++	end
++
+ 	return {
+ 		openlayers_url = config.openlayers_url(),
+ 		tile_layer = config.tile_layer(),
+-		zoom = config.zoom(12),
+-		pos = config.center(),
++		zoom = zoom,
++		pos = pos,
++		domain_maps = M.domain_maps(),
+ 	}
+ end
+ 
+diff --git a/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html b/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
+index 67c119c..e89f08e 100644
+--- a/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
++++ b/package/gluon-web-osm/files/lib/gluon/web/view/model/osm/map.html
+@@ -39,6 +39,35 @@
+ 			wrapper.addEventListener('gluon-show', function() {
+ 				map.updateSize();
+ 			});
++
++			// Neanderfunk: Ausschnitt folgt der Domain-Auswahl (Feld "domain"
++			// im selben Formular), solange der Knoten keine Position hat und
++			// niemand einen Punkt gesetzt oder Koordinaten eingetippt hat. Es
++			// wandert nur der Ausschnitt, nie die Koordinaten.
++			var domainMaps = <%=json(self.domain_maps or {})%>;
++			var follow = !<%=json(self:cfgvalue().set)%>;
++			map.on('click', function() { follow = false; });
++			document.addEventListener('input', function(e) {
++				if (e.target && (e.target === elLon || e.target === elLat))
++					follow = false;
++			});
++
++			var elForm = elMap.closest ? elMap.closest('form') : null;
++			var elDomain = (elForm || document).querySelector('select[name$=".domain"]');
++			var showDomain = function() {
++				var m = elDomain && domainMaps[elDomain.value];
++				if (!follow || !m)
++					return;
++				var view = map.getView();
++				view.setCenter(ol.proj.fromLonLat([m.lon, m.lat]));
++				if (typeof m.zoom === 'number')
++					view.setZoom(m.zoom);
++			};
++			if (elDomain) {
++				elDomain.addEventListener('change', showDomain);
++				// Auswahl schon geaendert, bevor OpenLayers geladen war
++				showDomain();
++			}
+ 		});
+ 	})();
+ </script>
+diff --git a/package/gluon-web-osm/luasrc/usr/lib/lua/gluon/web/model/osm.lua b/package/gluon-web-osm/luasrc/usr/lib/lua/gluon/web/model/osm.lua
+index 294cadd..cf33ac2 100644
+--- a/package/gluon-web-osm/luasrc/usr/lib/lua/gluon/web/model/osm.lua
++++ b/package/gluon-web-osm/luasrc/usr/lib/lua/gluon/web/model/osm.lua
+@@ -26,6 +26,8 @@ function MapValue:__init__(title, options)
+ 	self.pos = options.pos or {lon = 0, lat = 0}
+ 	self.zoom = options.zoom or 0
+ 	self.set = options.set or false
++	-- Neanderfunk: Kartenausschnitt je Domain, siehe map.html
++	self.domain_maps = options.domain_maps
+ end
+ 
+ function MapValue:cfgvalue()
