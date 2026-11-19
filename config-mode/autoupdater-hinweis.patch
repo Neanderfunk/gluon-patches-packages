@@ -1,0 +1,63 @@
+Config-Mode, Automatische Updates: wozu sie gut sind
+
+Gluons Seite "Automatische Updates" hat nur Schalter und Branch, ohne
+Erklaerung. Jetzt steht darueber: "Der Knoten erhaelt Sicherheitsupdates
+und bleibt nicht zurueck, wenn sich im Freifunk etwas aendert, zum Beispiel
+am VPN. Ohne Updates verliert er irgendwann den Anschluss." Also zwei
+Gruende: Sicherheit, und dass der Knoten Aenderungen im Netz mitmacht. Neue
+msgid in pot, de und fr von gluon-web-autoupdater. Wunsch adorfer
+19.11.2026.
+
+Erzeugt gegen Gluon 0ad3ad5b09b3 (v2025.1.3-5).
+
+diff --git a/package/gluon-web-autoupdater/i18n/de.po b/package/gluon-web-autoupdater/i18n/de.po
+index 9f1fbec..7357274 100644
+--- a/package/gluon-web-autoupdater/i18n/de.po
++++ b/package/gluon-web-autoupdater/i18n/de.po
+@@ -18,3 +18,6 @@ msgstr "Branch"
+ 
+ msgid "Enable"
+ msgstr "Aktivieren"
++
++msgid "The node receives security updates and does not fall behind when something changes in Freifunk, for example the VPN. Without updates it may lose its connection at some point."
++msgstr "Der Knoten erhält Sicherheitsupdates und bleibt nicht zurück, wenn sich im Freifunk etwas ändert, zum Beispiel am VPN. Ohne Updates verliert er irgendwann den Anschluss."
+diff --git a/package/gluon-web-autoupdater/i18n/fr.po b/package/gluon-web-autoupdater/i18n/fr.po
+index fec2417..9280ec8 100644
+--- a/package/gluon-web-autoupdater/i18n/fr.po
++++ b/package/gluon-web-autoupdater/i18n/fr.po
+@@ -18,3 +18,6 @@ msgstr "Branche"
+ 
+ msgid "Enable"
+ msgstr "Activer"
++
++msgid "The node receives security updates and does not fall behind when something changes in Freifunk, for example the VPN. Without updates it may lose its connection at some point."
++msgstr "Le nœud reçoit les mises à jour de sécurité et reste à jour quand quelque chose change dans Freifunk, par exemple le VPN. Sans mises à jour, il peut un jour perdre la connexion."
+diff --git a/package/gluon-web-autoupdater/i18n/gluon-web-autoupdater.pot b/package/gluon-web-autoupdater/i18n/gluon-web-autoupdater.pot
+index 1cce85c..1e7afd4 100644
+--- a/package/gluon-web-autoupdater/i18n/gluon-web-autoupdater.pot
++++ b/package/gluon-web-autoupdater/i18n/gluon-web-autoupdater.pot
+@@ -9,3 +9,6 @@ msgstr ""
+ 
+ msgid "Enable"
+ msgstr ""
++
++msgid "The node receives security updates and does not fall behind when something changes in Freifunk, for example the VPN. Without updates it may lose its connection at some point."
++msgstr ""
+diff --git a/package/gluon-web-autoupdater/luasrc/lib/gluon/config-mode/model/admin/autoupdater.lua b/package/gluon-web-autoupdater/luasrc/lib/gluon/config-mode/model/admin/autoupdater.lua
+index 3228376..a234fbe 100644
+--- a/package/gluon-web-autoupdater/luasrc/lib/gluon/config-mode/model/admin/autoupdater.lua
++++ b/package/gluon-web-autoupdater/luasrc/lib/gluon/config-mode/model/admin/autoupdater.lua
+@@ -4,7 +4,12 @@
+ local uci = require("simple-uci").cursor()
+ local autoupdater = uci:get_first("autoupdater", "autoupdater")
+ 
+-local f = Form(translate("Automatic updates"))
++-- Neanderfunk: why automatic updates matter - security updates, and the
++-- node does not fall behind when something changes in the network
++local f = Form(translate("Automatic updates"), translate(
++	"The node receives security updates and does not fall behind when "
++	.. "something changes in Freifunk, for example the VPN. Without updates "
++	.. "it may lose its connection at some point."))
+ local s = f:section(Section)
+ local o
+ 

@@ -68,6 +68,7 @@ umgeschrieben hat.
 | `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH; im Browser bestätigt (D-Link M60, 26111822bro, 19.11.2026, adorfer) | passt zu `neanderfunk-port-roles` |
 | `config-mode/domain-select-current.sh` | Domain-Auswahl: aktuelle Domain immer in der Liste und vorbelegt, auch versteckt (frischer Knoten in `default_domain`) | |
 | `config-mode/domain-select-code.sh` | Domain-Auswahl: Code vor dem Namen („01_vel: Velbert“), sortiert nach Code; setzt auf `domain-select-current` auf | |
+| `config-mode/autoupdater-hinweis.sh` | Seite „Automatische Updates“: Erklärung, wozu sie gut sind (Sicherheitsupdates, Knoten bleibt bei Änderungen im Netz nicht zurück); neue msgid in pot/de/fr von `gluon-web-autoupdater` | |
 | `config-mode/geo-location-domain-map.sh` | Karte im Wizard startet auf der aktuellen Domain und folgt der Domain-Auswahl, solange keine Position gesetzt ist; Domain-Schlüssel `neanderfunk_map` | Multi-Domain-Site mit `neanderfunk_map` je Domain |
 | `respondd/respondd-wifi-frequency.sh` | respondd meldet die Frequenz (MHz) je WLAN-Interface in `neighbours.wifi`, damit die Karte das Band einer Verbindung zeigen kann. Übernommen von 4830.org ([ffgtso/site-4830-v2025.1](https://github.com/ffgtso/site-4830-v2025.1) `28c7644`) | Auswertung in yanic/meshviewer offen |
 | `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
