@@ -65,7 +65,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
 | `setup-mode-network/setup-mode-wifi.sh` | dnsmasq an br-setup, Portal-Umleitung | `neanderfunk-setup-wifi` |
 | `setup-mode-network/setup-mode-tls.sh` | Config-Mode auch per https auf Port 443, selbstsigniertes Zertifikat aus `px5g` in /tmp | Feature `tls` (sonst nur Port 80) |
-| `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH | passt zu `neanderfunk-port-roles` |
+| `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH; im Browser bestätigt (D-Link M60, 26111822bro, 19.11.2026, adorfer) | passt zu `neanderfunk-port-roles` |
 | `config-mode/domain-select-current.sh` | Domain-Auswahl: aktuelle Domain immer in der Liste und vorbelegt, auch versteckt (frischer Knoten in `default_domain`) | |
 | `config-mode/domain-select-code.sh` | Domain-Auswahl: Code vor dem Namen („01_vel: Velbert“), sortiert nach Code; setzt auf `domain-select-current` auf | |
 | `config-mode/geo-location-domain-map.sh` | Karte im Wizard startet auf der aktuellen Domain und folgt der Domain-Auswahl, solange keine Position gesetzt ist; Domain-Schlüssel `neanderfunk_map` | Multi-Domain-Site mit `neanderfunk_map` je Domain |
