@@ -55,6 +55,7 @@ POST_UPDATE=(
   setup-mode-network/setup-mode-tls.sh          # Setup-Mode: Config-Mode auch per https auf Port 443 (Feature tls)
   config-mode/network-one-role.sh               # Config-Mode: Seite Netzwerk mit genau einer Rolle je Schnittstelle (Radio-Buttons)
   config-mode/domain-select-current.sh         # Config-Mode: aktuelle Domain immer in der Domain-Auswahl und vorbelegt
+  config-mode/domain-select-code.sh            # Config-Mode: Domain-Auswahl "01_vel: Velbert", sortiert nach Code (nach domain-select-current)
   config-mode/geo-location-domain-map.sh       # Config-Mode: Karte startet auf der Domain und folgt der Domain-Auswahl (neanderfunk_map)
   hostname/default-hostname.sh                  # Gluon-Core: Vorgabe-Hostname <Praefix><Modell>-<4 Stellen> (neanderfunk-default-hostname)
   respondd/respondd-wifi-frequency.sh           # respondd: Frequenz (MHz) je WLAN-Interface in neighbours.wifi (von 4830.org)

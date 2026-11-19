@@ -1,0 +1,38 @@
+Config-Mode: Domain-Auswahl mit Code vor dem Namen, sortiert nach Code
+
+Gluons Domain-Auswahl beschriftet jeden Eintrag nur mit dem Namen aus
+domain_names und sortiert nach Namen. Im Multi-Domain-Image tragen mehrere
+Domains denselben Namen (LVR-HPH), und gefragt wird nach der Nummer. Jetzt
+steht der Code vorne ("01_vel: Velbert"), und die Liste ist nach Code
+sortiert. Ein langer Name wird im geschlossenen Feld hinten eher
+abgeschnitten, der Code bleibt immer lesbar. Der Wert der Option bleibt der
+Code; das JavaScript von Karte und Vorgabe-Hostname liest nur den Wert.
+
+Setzt auf domain-select-current auf (dieselbe Datei). Wunsch adorfer
+19.11.2026. Offline-Test: config-mode/domain-select-code.test.lua.
+
+diff --git a/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua b/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+index a2dcf81..18fdacc 100644
+--- a/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
++++ b/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+@@ -37,7 +37,8 @@ return function(form, uci)
+ 			end
+ 		end
+ 
+-		table.sort(list, function(a, b) return a.domain_name < b.domain_name end)
++		-- Neanderfunk: sorted by code (01_vel, 02_met, ...), like the label
++		table.sort(list, function(a, b) return a.domain_code < b.domain_code end)
+ 		return list
+ 	end
+ 
+@@ -47,7 +48,9 @@ return function(form, uci)
+ 	o.default = selected_domain
+ 
+ 	for _, domain in ipairs(get_domain_list()) do
+-		o:value(domain.domain_code, domain.domain_name)
++		-- Neanderfunk: label "01_vel: Velbert", the code first; a long name
++		-- may be cut off at the end in the closed select
++		o:value(domain.domain_code, domain.domain_code .. ': ' .. domain.domain_name)
+ 	end
+ 
+ 	function o:write(data)

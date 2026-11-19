@@ -67,6 +67,7 @@ umgeschrieben hat.
 | `setup-mode-network/setup-mode-tls.sh` | Config-Mode auch per https auf Port 443, selbstsigniertes Zertifikat aus `px5g` in /tmp | Feature `tls` (sonst nur Port 80) |
 | `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH | passt zu `neanderfunk-port-roles` |
 | `config-mode/domain-select-current.sh` | Domain-Auswahl: aktuelle Domain immer in der Liste und vorbelegt, auch versteckt (frischer Knoten in `default_domain`) | |
+| `config-mode/domain-select-code.sh` | Domain-Auswahl: Code vor dem Namen („01_vel: Velbert“), sortiert nach Code; setzt auf `domain-select-current` auf | |
 | `config-mode/geo-location-domain-map.sh` | Karte im Wizard startet auf der aktuellen Domain und folgt der Domain-Auswahl, solange keine Position gesetzt ist; Domain-Schlüssel `neanderfunk_map` | Multi-Domain-Site mit `neanderfunk_map` je Domain |
 | `respondd/respondd-wifi-frequency.sh` | respondd meldet die Frequenz (MHz) je WLAN-Interface in `neighbours.wifi`, damit die Karte das Band einer Verbindung zeigen kann. Übernommen von 4830.org ([ffgtso/site-4830-v2025.1](https://github.com/ffgtso/site-4830-v2025.1) `28c7644`) | Auswertung in yanic/meshviewer offen |
 | `hostname/default-hostname.sh` | Vorgabe-Hostname neuer Knoten `<Präfix><Modell>-<4 Stellen der node_id>` (etwa `dias-WDR3600-1b8c`) | `neanderfunk-default-hostname` |
@@ -202,6 +203,20 @@ lua5.1 config-mode/domain-select-current.test.lua <gluon>/package/gluon-config-m
 ```
 
 Gegen die ungepatchte Datei scheitert der Fall „frisch“.
+
+### config-mode/domain-select-code
+
+Jeder Eintrag der Domain-Auswahl trägt den Code vor dem Namen, etwa
+„01_vel: Velbert“, und die Liste ist nach Code sortiert. Mehrere Domains
+tragen denselben Namen (LVR-HPH), gefragt wird nach der Nummer. Ein langer
+Name wird im geschlossenen Feld hinten eher abgeschnitten, der Code bleibt
+lesbar. Der Wert der Option bleibt der Code. Setzt auf
+`domain-select-current` auf (dieselbe Datei). Wunsch adorfer 19.11.2026.
+Offline-Test ohne Gluon (gegen die Datei ohne diesen Patch schlägt er fehl):
+
+```
+lua5.1 config-mode/domain-select-code.test.lua <gluon>/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+```
 
 ### config-mode/geo-location-domain-map
 
