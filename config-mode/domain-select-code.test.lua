@@ -32,12 +32,14 @@ local stubs = {
 		glob = function() return paths end,
 		contains = function(t, v) for _, x in ipairs(t) do if x == v then return true end end return false end,
 	},
+	-- ab domain-select-hint
+	['gluon.web.util'] = { pcdata = function(s) return s end },
 }
 
 local values = {}
 local env = setmetatable({
 	require = function(name) return assert(stubs[name], 'unerwartetes require ' .. name) end,
-	i18n = function() return { translate = function(s) return s end } end,
+	i18n = function() return { translate = function(s) return s end, _translate = function() return nil end } end,
 	Section = {},
 	ListValue = {},
 }, { __index = _G })

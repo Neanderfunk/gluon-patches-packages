@@ -1,0 +1,48 @@
+Config-Mode: Hinweis zu einer Domain, nur wenn sie ausgewaehlt ist
+
+Unter der Domain-Auswahl erscheint ein gelber Hinweis (model/warning), wenn
+die Site fuer die ausgewaehlte Domain einen Text hat: Schluessel
+gluon-config-mode:domain-hint:<code> in site/i18n. Er haengt per depends an
+der Auswahl, zeigt sich also nur, solange diese Domain gewaehlt ist, auch
+beim Umschalten ohne Neuladen. Ohne Schluessel kein Hinweis. Der Text ist
+reiner Text und wird escaped.
+
+Anlass: Halteverbot-Domain 25_hvb. Der Hinweis (nicht hier betreiben, wird
+verschoben, ggf. Ortung) soll nur bei dieser Domain stehen, nicht fuer
+alle im Einleitungstext. Wunsch adorfer 19.11.2026.
+
+Setzt auf domain-select-code auf (dieselbe Datei). Offline-Test:
+config-mode/domain-select-hint.test.lua.
+
+diff --git a/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua b/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+index 18fdacc..9797569 100644
+--- a/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
++++ b/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+@@ -47,12 +47,26 @@ return function(form, uci)
+ 
+ 	o.default = selected_domain
+ 
+-	for _, domain in ipairs(get_domain_list()) do
++	local domains = get_domain_list()
++	for _, domain in ipairs(domains) do
+ 		-- Neanderfunk: label "01_vel: Velbert", the code first; a long name
+ 		-- may be cut off at the end in the closed select
+ 		o:value(domain.domain_code, domain.domain_code .. ': ' .. domain.domain_name)
+ 	end
+ 
++	-- Neanderfunk: a hint for one domain, shown below the selection only
++	-- while that domain is selected (e.g. the parking domain 25_hvb). The
++	-- text comes from the site i18n key gluon-config-mode:domain-hint:<code>;
++	-- no key, no hint. Plain text, escaped (model/warning prints it raw).
++	local pcdata = require('gluon.web.util').pcdata
++	for _, domain in ipairs(domains) do
++		local hint = site_i18n._translate('gluon-config-mode:domain-hint:' .. domain.domain_code)
++		if hint then
++			local w = s:element('model/warning', { content = pcdata(hint) }, 'domain_hint_' .. domain.domain_code)
++			w:depends(o, domain.domain_code)
++		end
++	end
++
+ 	function o:write(data)
+ 		uci:set('gluon', 'core', 'domain', data)
+ 		uci:save('gluon')

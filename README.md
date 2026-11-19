@@ -68,6 +68,7 @@ umgeschrieben hat.
 | `config-mode/network-one-role.sh` | Seite „Netzwerk“: genau eine Rolle je Schnittstelle (Radio-Buttons Uplink, Mesh, Client), Uplink + Mesh nur per SSH; im Browser bestätigt (D-Link M60, 26111822bro, 19.11.2026, adorfer) | passt zu `neanderfunk-port-roles` |
 | `config-mode/domain-select-current.sh` | Domain-Auswahl: aktuelle Domain immer in der Liste und vorbelegt, auch versteckt (frischer Knoten in `default_domain`) | |
 | `config-mode/domain-select-code.sh` | Domain-Auswahl: Code vor dem Namen („01_vel: Velbert“), sortiert nach Code; setzt auf `domain-select-current` auf | |
+| `config-mode/domain-select-hint.sh` | Hinweis unter der Domain-Auswahl, nur solange eine bestimmte Domain gewählt ist (Text aus site/i18n `gluon-config-mode:domain-hint:<code>`); setzt auf `domain-select-code` auf | |
 | `config-mode/autoupdater-hinweis.sh` | Seite „Automatische Updates“: Erklärung, wozu sie gut sind (Sicherheitsupdates, Knoten bleibt bei Änderungen im Netz nicht zurück); neue msgid in pot/de/fr von `gluon-web-autoupdater` | |
 | `config-mode/geo-location-domain-map.sh` | Karte im Wizard startet auf der aktuellen Domain und folgt der Domain-Auswahl, solange keine Position gesetzt ist; Domain-Schlüssel `neanderfunk_map` | Multi-Domain-Site mit `neanderfunk_map` je Domain |
 | `respondd/respondd-wifi-frequency.sh` | respondd meldet die Frequenz (MHz) je WLAN-Interface in `neighbours.wifi`, damit die Karte das Band einer Verbindung zeigen kann. Übernommen von 4830.org ([ffgtso/site-4830-v2025.1](https://github.com/ffgtso/site-4830-v2025.1) `28c7644`) | Auswertung in yanic/meshviewer offen |
@@ -217,6 +218,23 @@ Offline-Test ohne Gluon (gegen die Datei ohne diesen Patch schlägt er fehl):
 
 ```
 lua5.1 config-mode/domain-select-code.test.lua <gluon>/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
+```
+
+### config-mode/domain-select-hint
+
+Unter der Domain-Auswahl erscheint ein gelber Hinweis (`model/warning`),
+solange eine Domain gewählt ist, für die die Site einen Text hat: Schlüssel
+`gluon-config-mode:domain-hint:<code>` in `site/i18n/*.po`, etwa
+`gluon-config-mode:domain-hint:25_hvb`. Der Hinweis hängt per `depends` an
+der Auswahl und blendet sich beim Umschalten ohne Neuladen ein und aus. Ohne
+Schlüssel kein Hinweis; der Text ist reiner Text und wird escaped. Anlass:
+Halteverbot-Domain `25_hvb` (nicht hier betreiben, wird verschoben).
+Setzt auf `domain-select-code` auf (dieselbe Datei). Wunsch adorfer
+19.11.2026. Offline-Test ohne Gluon (gegen die Datei ohne diesen Patch
+schlägt er fehl):
+
+```
+lua5.1 config-mode/domain-select-hint.test.lua <gluon>/package/gluon-config-mode-domain-select/luasrc/lib/gluon/config-mode/wizard/0200-domain-select.lua
 ```
 
 ### config-mode/geo-location-domain-map
