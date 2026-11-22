@@ -1,0 +1,61 @@
+Statusseite: eine Zeile "Domain-Helfer" unter "Domain"
+
+Was neanderfunk-domainhelper gerade tut, aus neanderfunk-respondd
+(statistics.neanderfunk.domainhelper), hoechstens eine Zeile und nur, wenn
+etwas laeuft; im Normalbetrieb erscheint nichts. Vorrang:
+
+  Netz kommt aus 18_nefuk, Wechsel in 23 min     (follow)
+  Netz kommt aus 18_nefuk, Wechsel steht an
+  Domainbruecke zu 18_nefuk an lan3 getrennt     (bridge, getrennt)
+  Domainbruecke zu 21_dias an eth0               (bridge, bleibt)
+  Ohne Gateway seit 12 min                       (island)
+
+Vom Laden der Seite. Der letzte Domainwechsel (last_switch) steht nur in
+respondd und im Login-Banner. Wunsch adorfer (22.11.2026): die Seite nicht
+ueberladen. Texte im Katalog neanderfunk-status-page.
+
+Setzt auf statuspage-domaincode auf (Zeile direkt unter dem Domainnamen).
+
+diff --git a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+index 24861d4..d8ae75a 100644
+--- a/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
++++ b/package/gluon-status-page/files/lib/gluon/status-page/view/status-page.html
+@@ -325,6 +325,28 @@
+ 		local g = ddhcpd and ddhcpd[group]
+ 		return type(g) == 'table' and g[key] or nil
+ 	end
++	-- neanderfunk-domainhelper aus neanderfunk-respondd
++	-- (statistics.neanderfunk.domainhelper): hoechstens eine Zeile und nur,
++	-- wenn gerade etwas laeuft. Vorrang: follow (Wechsel steht an), Trennung
++	-- oder Bruecke am Kabel, Insel. Vom Laden der Seite.
++	local dh_line
++	do
++		local dh = type(nf_stats.domainhelper) == 'table' and nf_stats.domainhelper or {}
++		local f, b, isl = dh.follow, dh.bridge, dh.island
++		if type(f) == 'table' and f.domain then
++			local left = (tonumber(f.wait) or 0) - (tonumber(f.age) or 0)
++			if left > 0 then
++				dh_line = string.format(nf.translate('network comes from %s, switch in %d min'), f.domain, math.ceil(left / 60))
++			else
++				dh_line = string.format(nf.translate('network comes from %s, switch due'), f.domain)
++			end
++		elseif type(b) == 'table' and b.domain then
++			dh_line = string.format(nf.translate(b.state == 'cut' and 'domain bridge to %s at %s cut' or 'domain bridge to %s at %s'),
++				b.domain, b.where or '?')
++		elseif type(isl) == 'table' and isl.age then
++			dh_line = string.format(nf.translate('no gateway for %d min'), math.floor(isl.age / 60))
++		end
++	end
+ 	-- Beides steht in einer Zeile "RAM/Flash". Fehlt ausnahmsweise einer der
+ 	-- Werte, haelt das Fragezeichen die Zuordnung zur Beschriftung aufrecht.
+ 	local ram_flash
+@@ -502,6 +524,9 @@
+ 							(<%| nodeinfo.system.domain_code %>)
+ 						</dd>
+ 					<%- end %>
++					<% if dh_line then -%>
++						<dt><%| nf.translate('Domain helper') %></dt><dd><%| dh_line %></dd>
++					<%- end %>
+ 					<% if nodeinfo.system.role then -%>
+ 						<dt><%:Role%></dt><dd><%| site_i18n._translate('gluon-web-node-role:role:' .. nodeinfo.system.role) %></dd>
+ 					<%- end %>

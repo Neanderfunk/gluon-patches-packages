@@ -60,6 +60,7 @@ umgeschrieben hat.
 | `status-page/statuspage-gateway-name.sh` | Statusseite: Gateway mit Hostnamen (per respondd vom Gateway selbst), MAC als Tooltip | `neanderfunk-status-page` (CGI `gateway-name`) |
 | `status-page/statuspage-ddhcpd.sh` | Statusseite: Block „DHCP (ddhcpd)“ mit Pool, Leases, Roaming seit Start und IPv4-Clients, live | `neanderfunk-respondd`, `neanderfunk-status-page`, `neanderfunk-ddhcpd` |
 | `status-page/statuspage-domaincode.sh` | Statusseite: Domain-Code hinter dem Domainnamen, etwa „Neanderfunk Diaspora (21_dias)“ | |
+| `status-page/statuspage-domainhelper.sh` | Statusseite: höchstens eine Zeile „Domain-Helfer“, nur wenn neanderfunk-domainhelper gerade etwas tut | neanderfunk-respondd 2, neanderfunk-domainhelper |
 | `status-page/statuspage-distance-wired.sh` | Statusseite: Entfernung nur bei WLAN-Nachbarn setzen; behebt einen TypeError aus Gluon bei Nachbarn am Kabel | |
 | `setup-mode-network/setup-mode-hostnames.sh` | `gluon.setup` und `setup.gluon` per DNS auf 192.168.1.1 | |
 | `setup-mode-network/setup-mode-captive.sh` | Portal-Erkennung der Clients führt auf die Setup-Seite | |
@@ -186,6 +187,20 @@ tragen mehrere Domains denselben Anzeigenamen (LVR-HPH), gefragt wird nach
 der Nummer. Ohne Domains (Single-Domain-Site) fehlt die Zeile wie bisher.
 Setzt auf `statuspage-ddhcpd` auf. Wunsch adorfer 17.11.2026; an einem
 Testknoten mit 26111701bro per Bind-Mount geprüft.
+
+### status-page/statuspage-domainhelper
+
+Unter „Domain“ höchstens eine Zeile „Domain-Helfer“, und nur, wenn
+neanderfunk-domainhelper gerade etwas tut (aus
+`statistics.neanderfunk.domainhelper`, neanderfunk-respondd 2): „Netz kommt
+aus 18_nefuk, Wechsel in 23 min“, „Domainbrücke zu 18_nefuk an lan3
+getrennt“, „Domainbrücke zu 21_dias an eth0“ oder „Ohne Gateway seit
+12 min“, in dieser Rangfolge. Im Normalbetrieb erscheint nichts; der letzte
+Domainwechsel steht nur in respondd und im Login-Banner. Vom Laden der
+Seite. Setzt auf `statuspage-domaincode` auf. Wunsch adorfer 22.11.2026.
+Geprüft: Logik mit nachgestellten Werten (lua5.1), die Seite rendert auf
+einem M60 (26111912bro) ohne Fehler; die Zeile selbst braucht den Build mit
+neanderfunk-respondd 2.
 
 ### config-mode/domain-select-current
 
